@@ -293,16 +293,15 @@ body, html {
 			<div class="innerBox">
 				<img src="http://192.168.10.225/first_prj/prj/images/img5.png"
 					style="float: left;">
-				<p>신규주문 N건</p>
+				<p>기존회원 N명</p>
+				<p>신규회원 N건</p>
 
 
 			</div>
 			<div class="innerBox">
 				<img src="http://192.168.10.225/first_prj/prj/images/img6.png"
 					style="float: left;">
-				<p>배송준비 N건</p>
-				<p>배송중 N건</p>
-				<p>배송완료 N건</p>
+				<p>신규문의 N건</p>
 			</div>
 		</div>
 	</div>
