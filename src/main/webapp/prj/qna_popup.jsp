@@ -116,8 +116,8 @@ $(function(){
                 <th>등록일</th>
                 <td>2024-10-15</td>
 
-                <th>작성자</th>
-                <td>홍길동</td>
+                <th>아이디</th>
+                <td>star</td>
             </tr>
         </table>
 		<div class="form-container">

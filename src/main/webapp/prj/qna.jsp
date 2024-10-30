@@ -1,3 +1,9 @@
+<%@page import="inquiry.AdminInquiryDAO"%>
+<%@page import="inquiry.InquiryVO"%>
+<%@page import="java.util.List"%>
+<%@ page import="java.sql.SQLException" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"  %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -239,7 +245,6 @@ window.open("qna_popup.jsp","qna_popup","width=700,height=700, left="+left+",top
       <div class="form">
       
          <form>
-           
             <div class="form-group" >
                <label for="filter">유형</label>
                <select id="filter" name="filter" class="form-select">
@@ -267,8 +272,6 @@ window.open("qna_popup.jsp","qna_popup","width=700,height=700, left="+left+",top
                <input type="date" id="startDate" class="form-control date">~
                <input type="date" id="endDate" class="form-control date">
             </div>
-
-
             <div class="form-group" style="justify-content: center;margin-top:50px;">
                <input type="button"  id="searchBtn"  class="btn btn-success"   value="검색" >
                <input type="reset" class="btn btn-light" value="옵션 초기화">
@@ -277,6 +280,21 @@ window.open("qna_popup.jsp","qna_popup","width=700,height=700, left="+left+",top
       </div>
       
       <!-- 문의검색 결과 출력 div -->
+      
+      <% 
+      AdminInquiryDAO aiDAO =AdminInquiryDAO.getInstance();
+      List<InquiryVO> listBoard=null;
+  	try{
+  		listBoard=aiDAO.selectAllInquiry();
+  		
+  	}catch(SQLException se){
+  		se.printStackTrace();
+  	}//end catch
+  	
+      pageContext.setAttribute("listBoard", listBoard);
+      %>
+      
+      
  <div class="form" >
      <h5  class="form-group" style="border-bottom: 1px solid  #EEF0F4">검색결과 N건</h5>
    <table  class="table table-striped table-hover">
@@ -292,45 +310,20 @@ window.open("qna_popup.jsp","qna_popup","width=700,height=700, left="+left+",top
       <td>상품명</td>
       </tr>
       </thead>
-      <tbody>
-            <tr>
-      <td>접수일/예시</td>
-      <td>처리상태/예시</td>
-      <td>문의유형/예시</td>
-      <td>주문번호/예시</td>
-      <td>문의제목/예시</td>
-      <td>상품번호/예시</td>
-      <td>상품명/예시</td>
-      </tr>
-            <tr>
-      <td>접수일/예시</td>
-      <td>처리상태/예시</td>
-      <td>문의유형/예시</td>
-      <td>주문번호/예시</td>
-      <td>문의제목/예시</td>
-      <td>상품번호/예시</td>
-      <td>상품명/예시</td>
-      </tr>
-            <tr>
-      <td>접수일/예시</td>
-      <td>처리상태/예시</td>
-      <td>문의유형/예시</td>
-      <td>주문번호/예시</td>
-      <td>문의제목/예시</td>
-      <td>상품번호/예시</td>
-      <td>상품명/예시</td>
-      </tr>
-            <tr>
-      <td>접수일/예시</td>
-      <td>처리상태/예시</td>
-      <td>문의유형/예시</td>
-      <td>주문번호/예시</td>
-      <td>문의제목/예시</td>
-      <td>상품번호/예시</td>
-      <td>상품명/예시</td>
-      </tr>
-      
-      </tbody>
+  <tbody>
+    <c:forEach var="iVO" items="${listBoard}" varStatus="i">
+        <tr>
+            <td><c:out value="${iVO.createAt}"/></td>
+            <td><c:out value="${iVO.status}"/></td>
+            <td><c:out value="${iVO.category}"/></td>
+            <td><c:out value="${iVO.orderId}"/></td>
+            <td><c:out value="${iVO.title}"/></td>
+            <td><c:out value="${iVO.productId}"/></td>
+            <td><c:out value="${iVO.name}"/></td>
+        </tr>
+    </c:forEach>    
+</tbody>
+
    </table>
     
 <p style="color: E9ECEF">클릭시 문의 상세보기 페이지가 나타납니다.</p>
