@@ -7,319 +7,382 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
-
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import kr.co.sist.dao.DbConnection;
-import kr.co.sist.util.BoardUtil;
+import kr.co.sist.util.*;
 
 public class AdminInquiryDAO {
 	private static AdminInquiryDAO aiDAO;
-	
+
 	private AdminInquiryDAO() {
-		
-		
-	}//constructor
-	
-	
-	/**
-	 * 총 게시물의 s수 검색
-	 * @param sVO
-	 * @return 게시물의 수
-	 * @throws SQLException
-	 */
-	/*
-	 * public int selectTotalCount( SearchVO sVO )throws SQLException{ int
-	 * totalCount=0;
-	 * 
-	 * Connection con=null; PreparedStatement pstmt=null; ResultSet rs=null;
-	 * 
-	 * DbConnection dbCon=DbConnection.getInstance(); //1.JNDI 사용객체 생성 //2.DBCP에서
-	 * DataSource 얻기
-	 * 
-	 * try { //3.Connection얻기 con=dbCon.getConn(); //4.쿼리문생성객체 얻기 StringBuilder
-	 * selectCount=new StringBuilder(); selectCount
-	 * .append("select count(num) cnt from board ");
-	 * 
-	 * //dynamic query : 검색 키워드를 판단 기준으로 where절이 동적생성되어야한다. if( sVO.getKeyword() !=
-	 * null && !"".equals(sVO.getKeyword()) ) { selectCount.append(" where instr(")
-	 * .append(BoardUtil.numToField(sVO.getField())) .append(",?) != 0"); }//end if
-	 * 
-	 * pstmt=con.prepareStatement(selectCount.toString()); //5.바인드 변수에 값 설정 if(
-	 * sVO.getKeyword() != null && !"".equals(sVO.getKeyword()) ) {
-	 * pstmt.setString(1, sVO.getKeyword()); }//end if
-	 * 
-	 * //6.쿼리문 수행후 결과 얻기 rs=pstmt.executeQuery(); if(rs.next()) {
-	 * totalCount=rs.getInt("cnt"); }//end if }finally { //7.연결 끊기 dbCon.dbClose(rs,
-	 * pstmt, con); }//end finally return totalCount; }//selectTotalCount
-	 */
-	
+
+	}// constructor
+
 	public static AdminInquiryDAO getInstance() {
-		if(aiDAO==null) {
-			aiDAO=new AdminInquiryDAO();
-			
-		}//end if
+		if (aiDAO == null) {
+			aiDAO = new AdminInquiryDAO();
+
+		} // end if
 		return aiDAO;
-		
-	}//getInstance
-	
 
-	/**
-	 * 문의사항에 대한 정보를 받아서 하나의 문의사항을 선택하여 상세정보를 보는 일.
-	 * @param num
-	 * @return 문의사항 정보를 담은iVO
-	 */
-	public InquiryVO selectOneInquiry(int num)throws SQLException{
-		InquiryVO iVO =null;
+	}// getInstance
 
-		//db작업 수행하기
-		Connection con=null;
-		PreparedStatement pstmt=null;
-		ResultSet rs=null;
-		
-		DbConnection dbCon=DbConnection.getInstance();
-		
-		try {
-			//커넥션얻고
-			con= dbCon.getConn();
-			//쿼리문 생성객체 얻기
-			StringBuilder selectBoard=new StringBuilder();
-			selectBoard
-			.append("	select *	")
-			.append("    from inquiry    ")
-			.append("	where num=?	");
-			
-			//쿼리문 수행
-			pstmt= con.prepareStatement(selectBoard.toString());
-			//바인드 변수에 값 설정하기
-			pstmt.setInt(1, num);
-			
-			rs=pstmt.executeQuery();
-			if( rs.next() ) {
-				 
-				iVO = new InquiryVO();
-				iVO.setInquiryId(num);
-				iVO.setUserId(rs.getString("userId"));
-				//iVO.setAdminAd(rs.getString("admin_ad"));
-				iVO.setCategory(rs.getString("category"));
-				iVO.setTitle(rs.getString("title"));
-				iVO.setCreateAt(rs.getDate("create_at"));;
-				iVO.setStatus(rs.getString("status"));
-				
-				//CLOB데이터를 읽어들이기 위해서 별도의 stream을 연결한다.
-				BufferedReader br=new BufferedReader(
-						rs.getClob("content").getCharacterStream());
-				
-				StringBuilder content=new StringBuilder();
-				String temp;//한줄 읽어들인 데이터를 저장할 변수
-				try {
-					while( (temp=br.readLine()) != null) {
-						//한줄 읽어들여 content에 저장
-						content.append(temp).append("\n");
-					}//end while
-					//모든 줄을 읽어들여 저장한 변수를 BoardVO객체에 할당한다.
-					iVO.setContent(content.toString());
-					
-				}catch(IOException ie) {
-					ie.printStackTrace();
-				}//end catch
-			}//end if
-			
-		}finally { //db연결 끊기.
-			dbCon.dbClose(rs, pstmt, con);
-		}//end finally
-		
-		
-		return iVO;
-	}// selectOneInquiry
 
-	/**
-	 * 문의에 대한 정보를 받아 모든 문의를 검색하는 일.
-	 * @param iVO
-	 * @return
-	 */
-	/*
-	 * public List<InquirySearchVO> selectAllInquiry(InquirySearchVO isVO) {
-	 * List<InquirySearchVO> list = new ArrayList<InquirySearchVO>(); Connection
-	 * con=null; PreparedStatement pstmt=null; ResultSet rs=null;
-	 * 
-	 * DbConnection dbCon=DbConnection.getInstance();
-	 * 
-	 * try { //connection얻기 con=dbCon.getConn(); //쿼리문 생성객체 얻기 StringBuilder
-	 * selectBoard=new StringBuilder(); selectBoard
-	 * .append("	select num,subject, writer,input_date,ip	")
-	 * .append("	from	(select num,subject, writer,input_date,ip,	")
-	 * .append("	row_number() over( order by input_date desc) rnum	")
-	 * .append("	from board	");
-	 * 
-	 * //dynamic query : 검색 키워드를 판단 기준으로 where절이 동적생성되어야한다. if( sVO.getKeyword() !=
-	 * null && !"".equals(sVO.getKeyword()) ) { selectBoard.append(" where instr(")
-	 * .append(BoardUtil.numToField(sVO.getField())) .append(",?) != 0"); }//end if
-	 * 
-	 * selectBoard.append("	)where rnum between ? and ?	");
-	 * 
-	 * System.out.println( selectBoard );
-	 * 
-	 * pstmt=con.prepareStatement(selectBoard.toString()); //바인드 변수에 값 설정 int
-	 * bindInd=0; if( sVO.getKeyword() != null && !"".equals(sVO.getKeyword()) ) {
-	 * pstmt.setString( ++bindInd, sVO.getKeyword()); }//end if
-	 * pstmt.setInt(++bindInd, sVO.getStartNum()); pstmt.setInt(++bindInd,
-	 * sVO.getEndNum());
-	 * 
-	 * //쿼리문 수행 후 결과 얻기 rs=pstmt.executeQuery();
-	 * 
-	 * BoardVO bVO=null; while( rs.next() ) { bVO=new BoardVO(); bVO.setNum(
-	 * rs.getInt("num")); bVO.setSubject(rs.getString("subject"));
-	 * bVO.setWriter(rs.getString("writer"));
-	 * bVO.setInput_date(rs.getDate("input_date")); bVO.setIp(rs.getString("ip"));
-	 * 
-	 * list.add(bVO); }//end while
-	 * 
-	 * 
-	 * }finally { dbCon.dbClose(rs, pstmt, con); }//end finally return list; }//
-	 * selectAllInquiry
-	 */
-	
-	
-	/**
-	 * 사용자의 문의에 관리자의 답변과 상태를 업데이트하는 메서드
-	 * @param iVO 업데이트할 문의 정보를 담고 있는 InquiryVO 객체
-	 * @return 업데이트된 행의 개수
-	 * @throws SQLException 데이터베이스 오류 발생 시
-	 */
-	
-	
+    public InquiryVO selectOneInquiry(int num) throws SQLException {
+        InquiryVO iVO = null;
+        String sql = "SELECT inquiry_id, user_id, admin_ad, category, title, create_at, status, content FROM inquiry WHERE inquiry_id = ?";
+
+        try (Connection con = DbConnection.getInstance().getConn();
+             PreparedStatement pstmt = con.prepareStatement(sql)) {
+
+            pstmt.setInt(1, num);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    iVO = new InquiryVO();
+                    iVO.setInquiryId(rs.getInt("inquiry_id"));
+                    iVO.setUserId(rs.getString("user_id"));
+                    iVO.setAdminAd(rs.getString("admin_ad"));
+                    iVO.setCategory(rs.getString("category"));
+                    iVO.setTitle(rs.getString("title"));
+                    iVO.setCreateAt(rs.getTimestamp("create_at"));
+                    iVO.setStatus(rs.getString("status"));
+
+                    try {
+                        BufferedReader br = new BufferedReader(rs.getClob("content").getCharacterStream());
+                        StringBuilder content = new StringBuilder();
+                        String temp;
+                        while ((temp = br.readLine()) != null) {
+                            content.append(temp).append("\n");
+                        }
+                        iVO.setContent(content.toString());
+                    } catch (IOException ie) {
+                        throw new SQLException("CLOB 데이터를 읽는 중 오류가 발생했습니다.", ie);
+                    }
+                }
+            }
+        }
+        return iVO;
+    }//selectOneInquiry
+
+
 	/**
 	 * 모든 문의사항을 조회하는 메서드
+	 * 
 	 * @return 모든 문의사항 정보를 담은 List<InquiryVO>
 	 * @throws SQLException 데이터베이스 오류 발생 시
 	 */
 	public List<InquiryVO> selectAllInquiry() throws SQLException {
+		List<InquiryVO> inquiryList = new ArrayList<>();
+
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		DbConnection dbCon = DbConnection.getInstance();
+
+		try {
+			// 데이터베이스 연결
+			con = dbCon.getConn();
+
+			// SQL 쿼리 작성
+			StringBuilder selectQuery = new StringBuilder();
+
+
+			
+			// 쿼리문 작성
+			selectQuery.append("select inquiry_id,user_id,admin_ad,category,title,create_at,status ")
+			           .append("FROM INQUIRY ");
+
+			pstmt = con.prepareStatement(selectQuery.toString());
+
+			// 쿼리 실행
+			rs = pstmt.executeQuery();
+
+			// 결과를 InquiryVO 객체에 저장
+			while (rs.next()) {
+			    InquiryVO iVO = new InquiryVO();
+			    
+			    // 매핑 작업
+			    iVO.setInquiryId(rs.getInt("inquiry_id"));
+			    iVO.setUserId(rs.getString("user_id"));
+			    iVO.setAdminAd(rs.getString("admin_ad"));
+			    iVO.setCategory(rs.getString("category"));
+			    iVO.setTitle(rs.getString("title"));
+			    iVO.setCreateAt(rs.getTimestamp("create_at"));
+			    iVO.setStatus(rs.getString("status"));
+			    
+			    // 필요한 리스트나 컬렉션에 추가하는 코드 추가 가능
+
+				// 리스트에 추가
+				inquiryList.add(iVO);
+			}
+		} finally {
+			// 자원 해제
+			dbCon.dbClose(rs, pstmt, con);
+		}
+
+		return inquiryList; // 모든 문의사항 리스트 반환
+	}//selectAllInquiry
+
+	/**
+	 * 관리자의 문의 답변내용을 추가하는 일
+	 * @param 
+	 * @return
+	 * @throws SQLException
+	 */
+	public int insertHandleInquiry(InquiryVO iVO) throws SQLException {
+		int rowCount = 0;
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		DbConnection dbCon = DbConnection.getInstance();
+
+		try {
+			// 데이터베이스 연결
+			con = dbCon.getConn();
+
+			// SQL 업데이트 쿼리 작성
+			StringBuilder updateQuery = new StringBuilder();
+			updateQuery.append("UPDATE inquiry ").append("SET status = ?, ").append("    admin_ad = ? ")
+					.append("WHERE inquiry_id = ?");
+
+			pstmt = con.prepareStatement(updateQuery.toString());
+
+			// 바인드 변수 설정
+			pstmt.setString(1, iVO.getStatus()); // 상태를 업데이트
+			pstmt.setString(2, iVO.getAdminAd()); // 관리자 답변을 업데이트
+			pstmt.setInt(3, iVO.getInquiryId()); // 특정 문의 ID에 대해 업데이트
+
+			// 쿼리문 실행 후 영향받은 행의 수를 반환
+			rowCount = pstmt.executeUpdate();
+		} finally {
+			// 자원 해제
+			dbCon.dbClose(null, pstmt, con);
+		}
+		return rowCount; // 업데이트된 행의 개수를 반환
+	}//updateHandleInquiry
+
+	/**
+	 * 특정 문의사항을 삭제하는 메서드
+	 * 
+	 * @param iVo
+	 * @return 삭제된 행 수
+	 */
+	public int deleteInquiry(InquiryVO iVo) throws SQLException {
+		int deleteCnt = 0;
+
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		DbConnection dbCon = DbConnection.getInstance();
+
+		try {
+			con = dbCon.getConn();
+			String query = "DELETE FROM inquiry WHERE inquiry_id = ?";
+			pstmt = con.prepareStatement(query);
+			pstmt.setInt(1, iVo.getInquiryId());
+
+			deleteCnt = pstmt.executeUpdate();
+		} finally {
+			dbCon.dbClose(null, pstmt, con);
+		}
+		return deleteCnt;
+	}// deleteInquiry
+	
+	
+	/**
+	 * 날짜, 유형별로 검색하여 문의를 가져오는 일.
+	 * @param filter
+	 * @param startDate
+	 * @param endDate
+	 * @return
+	 * @throws SQLException
+	 */
+	public List<InquiryVO> selectInquiriesByFilter(String filter, String startDate, String endDate) throws SQLException {
 	    List<InquiryVO> inquiryList = new ArrayList<>();
+	    StringBuilder sql = new StringBuilder("SELECT * FROM inquiry WHERE 1=1");
 
-	    Connection con = null;
-	    PreparedStatement pstmt = null;
-	    ResultSet rs = null;
-	    DbConnection dbCon = DbConnection.getInstance();
-
-	    try {
-	        // 데이터베이스 연결
-	        con = dbCon.getConn();
-
-	        // SQL 쿼리 작성
-	        StringBuilder selectQuery = new StringBuilder();
-	        
-	        
-	/*
-	* SELECT i.CREATE_AT, i.STATUS , i.CATEGORY , o.ORDER_ID , i.TITLE , p.PRODUCT_ID , p.NAME
-	*  FROM INQUIRY i
-	*   JOIN ORDERS o ON i.USER_ID = o.USER_ID
-	 * JOIN ORDERED_PRODUCT op ON o.ORDER_ID = op.ORDER_ID 
-	 * JOIN PRODUCTS p ON op.PRODUCT_ID = p.PRODUCT_ID ;
-		*/
-	        selectQuery
-	        .append("SELECT i.CREATE_AT, i.STATUS, i.CATEGORY, o.ORDER_ID, i.TITLE, p.PRODUCT_ID, p.NAME ")
-	        .append("FROM INQUIRY i ")
-	        .append("JOIN ORDERS o ON i.USER_ID = o.USER_ID ")
-	        .append("JOIN ORDERED_PRODUCT op ON o.ORDER_ID = op.ORDER_ID ")
-	        .append("JOIN PRODUCTS p ON op.PRODUCT_ID = p.PRODUCT_ID");
-
-	    pstmt = con.prepareStatement(selectQuery.toString());
-
-	    // 쿼리 실행
-	    rs = pstmt.executeQuery();
-
-	    // 결과를 InquiryVO 객체에 저장
-	    while (rs.next()) {
-	        InquiryVO iVO = new InquiryVO();
-	        
-	        // 매핑 작업
-	        iVO.setCreateAt(rs.getTimestamp("CREATE_AT"));  // TIMESTAMP 형식을 Date로 변환하여 설정
-	        iVO.setStatus(rs.getString("STATUS"));
-	        iVO.setCategory(rs.getString("CATEGORY"));
-	        iVO.setOrderId(rs.getInt("ORDER_ID"));
-	        iVO.setTitle(rs.getString("TITLE"));
-	        iVO.setProductId(rs.getInt("PRODUCT_ID"));
-	        iVO.setName(rs.getString("NAME"));  // name을 String으로 변경하여 매핑
-
-	        // 리스트에 추가
-	        inquiryList.add(iVO);
-	    }
-	    } finally {
-	        // 자원 해제
-	        dbCon.dbClose(rs, pstmt, con);
+	    // 조건 추가: filter가 전체가 아니고 값이 있을 때
+	    if (filter != null && !"all".equals(filter)) {
+	        sql.append(" AND category = ?");
 	    }
 
-	    return inquiryList; // 모든 문의사항 리스트 반환
-	}
-
-	
-	
-	
-	
-	
-	public int updateHandleInquiry(InquiryVO iVO) throws SQLException {
-	    int rowCount = 0;
-	    Connection con = null;
-	    PreparedStatement pstmt = null;
-	    DbConnection dbCon = DbConnection.getInstance();
-
-	    try {
-	        // 데이터베이스 연결
-	        con = dbCon.getConn();
-
-	        // SQL 업데이트 쿼리 작성
-	        StringBuilder updateQuery = new StringBuilder();
-	        updateQuery
-	            .append("UPDATE inquiry ")
-	            .append("SET status = ?, ")
-	            .append("    admin_ad = ? ")
-	            .append("WHERE inquiry_id = ?");
-
-	        pstmt = con.prepareStatement(updateQuery.toString());
-
-	        // 바인드 변수 설정
-	        pstmt.setString(1, iVO.getStatus());       // 상태를 업데이트
-	        pstmt.setString(2, iVO.getAdminAd());      // 관리자 답변을 업데이트
-	        pstmt.setInt(3, iVO.getInquiryId());       // 특정 문의 ID에 대해 업데이트
-
-	        // 쿼리문 실행 후 영향받은 행의 수를 반환
-	        rowCount = pstmt.executeUpdate();
-	    } finally {
-	        // 자원 해제
-	        dbCon.dbClose(null, pstmt, con);
+	    // 날짜 범위가 제공될 때만 날짜 조건 추가
+	    if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+	        sql.append(" AND create_at >= ? AND create_at < ?");
 	    }
-	    return rowCount; // 업데이트된 행의 개수를 반환
-	}
+
+	    try (Connection con = DbConnection.getInstance().getConn();
+	         PreparedStatement pstmt = con.prepareStatement(sql.toString())) {
+
+	        int paramIndex = 1;
+
+	        // 카테고리 필터 바인딩
+	        if (filter != null && !"all".equals(filter)) {
+	            pstmt.setString(paramIndex++, filter);
+	        }
+
+	        // 날짜 필터 바인딩
+	        if (startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+	            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	            try {
+	                Date parsedStartDate = dateFormat.parse(startDate);
+	                Date parsedEndDate = dateFormat.parse(endDate);
+
+	                // endDate에 하루를 더하여 해당 날짜의 끝까지 포함하도록 함
+	                Calendar cal = Calendar.getInstance();
+	                cal.setTime(parsedEndDate);
+	                cal.add(Calendar.DATE, 1);
+	                Date adjustedEndDate = cal.getTime();
+
+	                pstmt.setDate(paramIndex++, new java.sql.Date(parsedStartDate.getTime()));
+	                pstmt.setDate(paramIndex++, new java.sql.Date(adjustedEndDate.getTime()));
+	            } catch (ParseException e) {
+	                throw new SQLException("날짜 변환 중 오류가 발생했습니다.", e);
+	            }
+	        }
+
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            while (rs.next()) {
+	                InquiryVO inquiry = new InquiryVO();
+	                inquiry.setInquiryId(rs.getInt("inquiry_id"));
+	                inquiry.setUserId(rs.getString("user_id"));
+	                inquiry.setAdminAd(rs.getString("admin_ad"));
+	                inquiry.setCategory(rs.getString("category"));
+	                inquiry.setTitle(rs.getString("title"));
+	                inquiry.setCreateAt(rs.getTimestamp("create_at"));  // TIMESTAMP 사용
+	                inquiry.setStatus(rs.getString("status"));
+	                inquiryList.add(inquiry);
+	            }
+	        }
+	    }
+	    return inquiryList;
+	}//selectInquiriesByFilter
 
 	
 	
-	
-	
-	
 
-    /**
-     * 특정 문의사항을 삭제하는 메서드
-     * @param iVo
-     * @return 삭제된 행 수
-     */
-    public int deleteInquiry(InquiryVO iVo) throws SQLException {
-        int deleteCnt = 0;
-
+    // 총 문의 수 가져오기 (필터 적용)
+    public int getTotalInquiryCount(SearchVO sVO) throws SQLException {
+        int totalCount = 0;
         Connection con = null;
         PreparedStatement pstmt = null;
+        ResultSet rs = null;
         DbConnection dbCon = DbConnection.getInstance();
 
         try {
             con = dbCon.getConn();
-            String query = "DELETE FROM inquiry WHERE inquiry_id = ?";
-            pstmt = con.prepareStatement(query);
-            pstmt.setInt(1, iVo.getInquiryId());
+            StringBuilder query = new StringBuilder("SELECT COUNT(*) AS total FROM inquiry WHERE 1=1");
 
-            deleteCnt = pstmt.executeUpdate();
+            List<Object> parameters = new ArrayList<>();
+
+            // 필터 적용
+            if (!sVO.getFilter().equals("all")) {
+                query.append(" AND category = ?");
+                parameters.add(sVO.getFilter());
+            }
+
+            // 검색 키워드 적용
+            if (sVO.getKeyword() != null && !sVO.getKeyword().isEmpty()) {
+                query.append(" AND ").append( BoardUtil.numToField(sVO.getField())).append(" LIKE ?");
+                parameters.add("%" + sVO.getKeyword() + "%");
+            }
+
+            // 날짜 범위 적용
+            if (sVO.getStartDate() != null && !sVO.getStartDate().isEmpty() &&
+                sVO.getEndDate() != null && !sVO.getEndDate().isEmpty()) {
+                query.append(" AND create_at BETWEEN ? AND ?");
+                parameters.add(Timestamp.valueOf(sVO.getStartDate() + " 00:00:00"));
+                parameters.add(Timestamp.valueOf(sVO.getEndDate() + " 23:59:59"));
+            }
+
+            pstmt = con.prepareStatement(query.toString());
+
+            // 파라미터 설정
+            for (int i = 0; i < parameters.size(); i++) {
+                pstmt.setObject(i + 1, parameters.get(i));
+            }
+
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                totalCount = rs.getInt("total");
+            }
         } finally {
-            dbCon.dbClose(null, pstmt, con);
+            dbCon.dbClose(rs, pstmt, con);
         }
-        return deleteCnt;
-    }//deleteInquiry
 
+        return totalCount;
+    }
+    // 문의 목록 가져오기 (필터 및 페이지네이션 적용)
+    public List<InquiryVO> getInquiries(SearchVO sVO) throws SQLException {
+        List<InquiryVO> inquiryList = new ArrayList<>();
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        DbConnection dbCon = DbConnection.getInstance();
+
+        try {
+            con = dbCon.getConn();
+            StringBuilder query = new StringBuilder("SELECT * FROM (");
+            query.append("SELECT ROW_NUMBER() OVER (ORDER BY inquiry_id DESC) AS row_num, inquiry.* FROM inquiry WHERE 1=1");
+
+            List<Object> parameters = new ArrayList<>();
+
+            // 필터 적용
+            if (!sVO.getFilter().equals("all")) {
+                query.append(" AND category = ?");
+                parameters.add(sVO.getFilter());
+            }
+
+            // 검색 키워드 적용
+            if (sVO.getKeyword() != null && !sVO.getKeyword().isEmpty()) {
+                query.append(" AND ").append(BoardUtil.numToField(sVO.getField())).append(" LIKE ?");
+                parameters.add("%" + sVO.getKeyword() + "%");
+            }
+
+            // 날짜 범위 적용
+            if (sVO.getStartDate() != null && !sVO.getStartDate().isEmpty() &&
+                sVO.getEndDate() != null && !sVO.getEndDate().isEmpty()) {
+                query.append(" AND create_at BETWEEN ? AND ?");
+                parameters.add(Timestamp.valueOf(sVO.getStartDate() + " 00:00:00"));
+                parameters.add(Timestamp.valueOf(sVO.getEndDate() + " 23:59:59"));
+            }
+
+            query.append(") temp WHERE row_num BETWEEN ? AND ?");
+
+            pstmt = con.prepareStatement(query.toString());
+
+            // 파라미터 설정
+            int paramIndex = 1;
+            for (Object param : parameters) {
+                pstmt.setObject(paramIndex++, param);
+            }
+            pstmt.setInt(paramIndex++, sVO.getStartNum());
+            pstmt.setInt(paramIndex, sVO.getEndNum());
+
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                InquiryVO iVO = new InquiryVO();
+                iVO.setInquiryId(rs.getInt("inquiry_id"));
+                iVO.setTitle(rs.getString("title"));
+                iVO.setUserId(rs.getString("user_id"));
+                iVO.setCategory(rs.getString("category"));
+                iVO.setStatus(rs.getString("status"));
+                iVO.setContent(rs.getString("content")); // CLOB 처리 필요 시 수정
+                iVO.setCreateAt(rs.getTimestamp("create_at"));
+                inquiryList.add(iVO);
+            }
+        } finally {
+            dbCon.dbClose(rs, pstmt, con);
+        }
+
+        return inquiryList;
+    }
+
+	
+	
 }// class

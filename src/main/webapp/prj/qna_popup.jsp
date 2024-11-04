@@ -1,9 +1,12 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"   
-    %>
-<!DOCTYPE html>
-<html>
+<%@page import="inquiry.AdminInquiryDAO"%>
+<%@page import="inquiry.InquiryVO"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<% request.setCharacterEncoding("UTF-8"); %>
 
+<!DOCTYPE html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,136 +18,148 @@
     <!-- jQuery CDN -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 
-<script type="text/javascript">
-$(function(){
-	$("#answer").click(function(){
-		save();
+       <script type="text/javascript">
+    $(function () {
 
-	})//등록버튼 이벤트 등록
-	
-	$("#delete").click(function(){
-		
-		alert("삭제버튼 등록");
-	})//삭제버튼 이벤트 등록
-	
-	$("#close").click(function(){
-		self.close();
-	})//닫기버튼 이벤트 등록
-	
-	
-})//ready
-	function save(){
-		let answer =$("#content").val();
-		alert(answer);
-	
-	}//sve
+        // 삭제 버튼 이벤트
+        $(".delete-button").click(function (event) {
+            if (confirm("해당 문의를 삭제하시겠습니까?")) {
+                // 폼 제출
+                $(this).closest('form').submit();
+            }
+        });
 
-</script>
-
-
+        // 닫기 버튼 이벤트
+        $("#close").click(function () {
+            self.close();
+        });
+        
+        
+        
+        
+    });
+    </script>
     <style>
-        body,
-        html {
+        body, html {
             margin: 0;
             padding: 0;
             height: 100%;
             font-family: Arial, sans-serif;
         }
-
         .header {
-            width: 100%;
             background-color: #28a745;
             color: white;
             padding: 15px;
             font-weight: bold;
             text-align: center;
         }
-
         .content {
             padding: 20px;
-            width: 100%;
         }
-
-        /* 테이블을 한 줄로 나란히 정렬하는 CSS */
         .titleTable {
             width: 100%;
             table-layout: fixed;
             border-collapse: collapse;
         }
-
-      th, td {
-            text-align: left;
+        th, td {
             padding: 10px;
             border: 1px solid #ddd;
-            white-space: nowrap; /* 데이터를 한 줄로 유지 */
+            white-space: nowrap;
         }
-
-     
-
         .form-container {
             padding: 20px;
             border: 1px solid #ddd;
             margin-top: 20px;
         }
-
         .footer {
             text-align: center;
             margin-top: 20px;
-            margin-right: 10px;
         }
-
-      
     </style>
 </head>
 
 <body>
-
-    <div class="header">
-        문의 관리
-    </div>
-
+    <div class="header">문의 관리</div>
     <div class="content">
-        <!-- 한 줄로 데이터를 표시 -->
-        <table class="titleTable">
-            <tr>
-                <th>문의 유형</th>
-                <td>예시</td>
+        <%
+            AdminInquiryDAO aiDAO = AdminInquiryDAO.getInstance();
+            InquiryVO iVO = null;
 
-                <th>제목</th>
-                <td>예시 제목</td>
+            String inquiryIdStr = request.getParameter("inquiryId");
+            if (inquiryIdStr != null && !inquiryIdStr.isEmpty()) {
+                try {
+                    int inquiryId = Integer.parseInt(inquiryIdStr);
+                    iVO = aiDAO.selectOneInquiry(inquiryId);
+                    request.setAttribute("iVO", iVO);
+                    request.setAttribute("inquiryId", inquiryId);
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                    out.println("<p>잘못된 형식의 ID입니다. 숫자로 입력해 주세요.</p>");
+                }
+            } else {
+                out.println("<p>유효한 ID가 전달되지 않았습니다.</p>");
+            }
 
-                <th>등록일</th>
-                <td>2024-10-15</td>
+            if (iVO == null) {
+                out.println("<p>해당 ID로 데이터를 찾을 수 없습니다.</p>");
+            }
+        %>
 
-                <th>아이디</th>
-                <td>star</td>
-            </tr>
-        </table>
-		<div class="form-container">
-			문의사항이 보이는 공간입니다 
-		</div>
+        <c:if test="${not empty iVO}">
+            <!-- 문의 정보 테이블 -->
+            <table class="titleTable">
+                <tr>
+                    <th>문의 유형</th>
+                    <td><c:out value="${iVO.category}"/></td>
+                    <th>제목</th>
+                    <td><c:out value="${iVO.title}"/></td>
+                    <th>등록일</th>
+                    <td> <fmt:formatDate value="${iVO.createAt}" pattern="yyyy-dd-MM"/></td>
+                    <th>아이디</th>
+                    <td><c:out value="${iVO.userId}"/></td>
+                </tr>
+            </table>
+            
+            <!-- 문의 내용 -->
+            <div class="form-container">
+                <p><c:out value="${iVO.content}"/></p>
+            </div>
 
-
-        <!-- 답변 등록 폼 -->
-        
-        <form action="">
+            <!-- 답변 등록 폼 -->
         <div class="form-container">
-            <h5>답변 등록</h5>
+                <h5>답변</h5>
+                <div class="form-group">
+                    <c:choose>
+                        <c:when test="${not empty iVO.adminAd}">
+                            <!-- 답변이 이미 있는 경우 -->
+                            <div><c:out value="${iVO.adminAd}"/></div>
+                         <form method="post" action="adminAd_process.jsp" name="subitFrm">
+							    <input type="hidden" name="inquiryId" value="${inquiryId}">
+							    <div class="footer">
+							        <button type="submit" class="btn btn-success btn-sm delete-button" name="submitAction" value="delete">삭제</button>
+							        <button type="button" class="btn btn-light btn-sm" id="close">닫기</button>
+							    </div>  
+							</form>
 
-            <div class="form-group">
-                <label for="content">내용</label>
-                <textarea id="content" class="form-control" rows="7" placeholder="내용을 입력하세요"></textarea>
+                        </c:when>
+                        <c:otherwise>
+                            <!-- 답변이 없는 경우 폼 표시 -->
+                            <form method="post" action="adminAd_process.jsp" name="submitFrm">
+							    <input type="hidden" name="inquiryId" value="${inquiryId}">
+							    <textarea id="content" class="form-control" rows="7" placeholder="내용을 입력하세요" name="answer"></textarea>
+							    <div class="footer">
+							        <button type="submit" class="btn btn-danger btn-sm" id="register" name="submitAction" value="register">등록</button>
+							        <button type="submit" class="btn btn-success btn-sm delete-button" name="submitAction" id="delete" value="delete">삭제</button>
+							        <button type="button" class="btn btn-light btn-sm" id="close">닫기</button>
+							    </div>  
+							</form>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
             </div>
-
-            <div class="footer">
-                <input type="button" class="btn btn-danger btn-sm" value="등록" id="answer" name="answer">
-                <input type="button" class="btn btn-success btn-sm" value="삭제" id="delete" name="delete">
-                <input type="button" class="btn btn-light btn-sm" value="닫기" id="close" name="close">
-            </div>
-        </div>
-        </form>
+        </c:if>
     </div>
-
 </body>
-
 </html>
+
+
