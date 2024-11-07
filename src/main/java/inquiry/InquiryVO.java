@@ -5,7 +5,7 @@ import java.util.Date;
 public class InquiryVO {
 //,제목,처리상태,등록일 작성자
 	private int inquiryId;
-	private String category, title, content, status, userId, adminAd, filter, startDate, endDate;
+	private String category, title, content, status, userId, adminAd;
 	private Date createAt;
 
 	public InquiryVO() {
@@ -13,7 +13,7 @@ public class InquiryVO {
 	}
 
 	public InquiryVO(int inquiryId, String category, String title, String content, String status, String userId,
-			String adminAd, String filter, String startDate, String endDate, Date createAt) {
+			String adminAd, Date createAt) {
 		super();
 		this.inquiryId = inquiryId;
 		this.category = category;
@@ -22,9 +22,6 @@ public class InquiryVO {
 		this.status = status;
 		this.userId = userId;
 		this.adminAd = adminAd;
-		this.filter = filter;
-		this.startDate = startDate;
-		this.endDate = endDate;
 		this.createAt = createAt;
 	}
 
@@ -84,30 +81,6 @@ public class InquiryVO {
 		this.adminAd = adminAd;
 	}
 
-	public String getFilter() {
-		return filter;
-	}
-
-	public void setFilter(String filter) {
-		this.filter = filter;
-	}
-
-	public String getStartDate() {
-		return startDate;
-	}
-
-	public void setStartDate(String startDate) {
-		this.startDate = startDate;
-	}
-
-	public String getEndDate() {
-		return endDate;
-	}
-
-	public void setEndDate(String endDate) {
-		this.endDate = endDate;
-	}
-
 	public Date getCreateAt() {
 		return createAt;
 	}
@@ -119,8 +92,11 @@ public class InquiryVO {
 	@Override
 	public String toString() {
 		return "InquiryVO [inquiryId=" + inquiryId + ", category=" + category + ", title=" + title + ", content="
-				+ content + ", status=" + status + ", userId=" + userId + ", adminAd=" + adminAd + ", filter=" + filter
-				+ ", startDate=" + startDate + ", endDate=" + endDate + ", createAt=" + createAt + "]";
+				+ content + ", status=" + status + ", userId=" + userId + ", adminAd=" + adminAd + ", createAt="
+				+ createAt + "]";
 	}
+
+
+
 
 }

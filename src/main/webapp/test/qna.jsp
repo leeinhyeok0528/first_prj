@@ -9,7 +9,7 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"  %>
 
-<jsp:useBean id="sVO" class="inquiry.InquirySearchVO" scope="page"/>
+<jsp:useBean id="sVO" class="inquiry.InquirySearchVO"  scope="page"/>
 <jsp:setProperty property="*" name="sVO"/>
 
 <!DOCTYPE html>
@@ -146,120 +146,82 @@
     </style>
 
     <script type="text/javascript">
-    $(document).ready(function () {
-        initializeDateFields();
-        setupRadioButtons();
-        setupSearchButton();
-        setupDateInputs();
-        setupResetButton();
-    });
-
-    // 페이지 로드시 날짜 기본 설정
-    function initializeDateFields() {
-        const today = new Date();
-        const formattedToday = formatDate(today);
-        $('#startDate').val(formattedToday);
-        $('#endDate').val(formattedToday);
-        // 페이지 로드시 '오늘' 라디오 버튼 선택
-        $('#btnradio1').prop('checked', true);
-    }
-
-    // 날짜 포맷팅 함수 (yyyy-mm-dd 형식으로 변환)
-    function formatDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    // 라디오 버튼 설정 함수
-    function setupRadioButtons() {
-        $('input[name="date"]').change(function () {
-            const today = new Date();
-            let startDate = new Date(today);
-            
-            switch (this.id) {
-                case 'btnradio1': // 오늘
-                    startDate = today;
-                    break;
-                case 'btnradio2': // 3일
-                    startDate.setDate(today.getDate() - 3);
-                    break;
-                case 'btnradio3': // 1주일
-                    startDate.setDate(today.getDate() - 7);
-                    break;
-                case 'btnradio4': // 1달
-                    startDate.setMonth(today.getMonth() - 1);
-                    break;
-            }
-            setDateRange(startDate, today);
+        $(document).ready(function () {
+            initializeDateFields();
+            setupRadioButtons();
+            setupSearchButton();
         });
-    }
 
-    // date input 필드 설정 함수
-    function setupDateInputs() {
-        $('#startDate, #endDate').on('change', function() {
-            // date input이 수동으로 변경되면 라디오 버튼 선택 해제
-            $('input[name="date"]').prop('checked', false);
-        });
-    }
-
-    // 날짜 범위 설정 함수
-    function setDateRange(startDate, endDate) {
-        $('#startDate').val(formatDate(startDate));
-        $('#endDate').val(formatDate(endDate));
-    }
-
-    // 검색 버튼 클릭 시 폼 제출
-    function setupSearchButton() {
-        $('#searchBtn').click(function () {
-            const startDate = $('#startDate').val();
-            const endDate = $('#endDate').val();
-
-            if (startDate && endDate && startDate > endDate) {
-                alert("시작일은 종료일보다 늦을 수 없습니다.");
-                return;
-            }
-
-            $('#frm').submit();
-        });
-    }
-
-    // Reset 버튼 설정 함수
-    function setupResetButton() {
-        $('input[type="reset"]').click(function(e) {
-            e.preventDefault(); // 기본 reset 동작 방지
-            
-            // 필터 초기화
-            $('#filter').val('all');
-            
-            // 날짜 초기화 (오늘 날짜로)
+        // 페이지 로드시 날짜 기본 설정
+        function initializeDateFields() {
             const today = new Date();
             const formattedToday = formatDate(today);
             $('#startDate').val(formattedToday);
             $('#endDate').val(formattedToday);
-            
-            // 라디오 버튼 '오늘' 선택
-            $('#btnradio1').prop('checked', true);
-            
-            // currentPage 초기화
-            $('#currentPage').val(1);
-            
-            // 폼 제출하여 전체 목록 조회
-            $('#frm').submit();
-        });
-    }
+        }
 
-    // 상세보기 팝업창 함수 (기존 코드 유지)
-    function openPopup(inquiryId) {
-        var left = window.screenX + 300;
-        var top = window.screenY + 200;
-        var width = 700;
-        var height = 700;
-        window.open("qna_popup.jsp?inquiryId=" + inquiryId, "qna_popup", 
-        		"width=" + width + ",height=" + height + ",left=" + left + ",top=" + top
-);
-    }//openPopup
+        // 날짜 포맷팅 함수 (yyyy-mm-dd 형식으로 변환)
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
+
+        // 라디오 버튼 설정 함수
+        function setupRadioButtons() {
+            $('input[name="date"]').change(function () {
+                const today = new Date();
+                let startDate = new Date(today);
+                switch (this.id) {
+                    case 'btnradio1':
+                        startDate = today;
+                        break;
+                    case 'btnradio2':
+                        startDate.setDate(today.getDate() - 3);
+                        break;
+                    case 'btnradio3':
+                        startDate.setDate(today.getDate() - 7);
+                        break;
+                    case 'btnradio4':
+                        startDate.setMonth(today.getMonth() - 1);
+                        break;
+                }
+                setDateRange(startDate, today);
+            });
+        }
+
+        // 날짜 범위 설정 함수
+        function setDateRange(startDate, endDate) {
+            $('#startDate').val(formatDate(startDate));
+            $('#endDate').val(formatDate(endDate));
+        }
+
+        // 검색 버튼 클릭 시 폼 제출
+        function setupSearchButton() {
+            $('#searchBtn').click(function () {
+                // 폼 제출 전에 유효성 검사 추가
+                const startDate = $('#startDate').val();
+                const endDate = $('#endDate').val();
+
+                if (startDate && endDate && startDate > endDate) {
+                    alert("시작일은 종료일보다 늦을 수 없습니다.");
+                    return;
+                }
+
+                // 폼 제출
+                $('#frm').submit();
+            });
+        }
+
+        // 상세보기 팝업창 함수
+        function openPopup(inquiryId) {
+            var left = window.screenX + 300;
+            var top = window.screenY + 200;
+            var width = 700;
+            var height = 700;
+            window.open("qna_popup.jsp?inquiryId=" + inquiryId, "qna_popup", "width=" + width + ",height=" + height + ",left=" + left + ",top=" + top);
+        }
     </script>
 </head>
 
@@ -268,7 +230,7 @@
 
 <!-- 서버 측 코드 시작 -->
 <%
-// 게시판 리스트 구현
+    // 게시판 리스트 구현
 
     // 1. 총 레코드 수 구하기
     int totalCount = 0; // 총 레코드 수
@@ -341,11 +303,11 @@
         List<InquiryVO> pagedList = listBoard.subList(fromIndex, toIndex);
 
         // 제목 길이 제한
-        String tempTitle = "";
+        String tempSubject = "";
         for (InquiryVO tempVO : pagedList) {
-            tempTitle = tempVO.getTitle();
-            if (tempTitle.length() > 30) {
-                tempVO.setTitle(tempTitle.substring(0, 29) + "...");
+            tempSubject = tempVO.getTitle();
+            if (tempSubject.length() > 30) {
+                tempVO.setTitle(tempSubject.substring(0, 29) + "...");
             }
         } // end for
 
@@ -385,11 +347,6 @@
             <form method="GET" action="qna.jsp" name="frm" id="frm" >
                 <!-- 현재 페이지를 관리하기 위한 숨겨진 필드 -->
                 <input type="hidden" id="currentPage" name="currentPage" value="1">
-                <!-- keyword, field 관련 숨겨진 필드 제거 -->
-                <!-- 
-                <input type="hidden" id="field" name="field" value="${sVO.field}">
-                <input type="hidden" id="keyword" name="keyword" value="${sVO.keyword}">
-                -->
 
                 <div class="form-group">
                     <label for="filter">유형</label>
@@ -457,16 +414,14 @@
                     </thead>
                     <tbody>
                         <%
-                        // 현재 페이지에 맞는 리스트를 이미 pagedList로 가져왔으므로, listBoard를 pagedList로 설정
-                                                    List<InquiryVO> displayList = (List<InquiryVO>) pageContext.getAttribute("listBoard");
-                                                    int articleNo = sVO.getStartNum();
+                            // 현재 페이지에 맞는 리스트를 이미 pagedList로 가져왔으므로, listBoard를 pagedList로 설정
+                            List<InquiryVO> displayList = (List<InquiryVO>) pageContext.getAttribute("listBoard");
+                            int articleNo = sVO.getStartNum();
                         %>
                         <c:forEach var="iVO" items="${listBoard}">
                             <tr>
-                                <td><%=articleNo%></td>
-                                <%
-                                articleNo++;
-                                %>
+                                <td><%= articleNo %></td>
+                                <% articleNo++; %>
                                 <td><c:out value="${iVO.category}"/></td>
                                 <td><a href="#" onclick="openPopup('${iVO.inquiryId}')">
                                     <c:out value="${iVO.title}"/></a></td>
@@ -480,13 +435,8 @@
             </div>
 
             <!-- 페이지네이션 -->
-            	<div id="pagination" style="text-align: center">
-            
-            <%
-                        sVO.setUrl("qna.jsp");
-                        %>
-            <%=new InquiryUtil().pagination(sVO)%>
-				</div>
+            <% sVO.setUrl("qna.jsp"); %>
+            <%= new InquiryUtil().pagination(sVO) %>
         </div>
     </div>
 </body>

@@ -1,12 +1,12 @@
-package inquiry;
+package review;
 
-public class SearchVO {
+public class ReviewSearchVO {
 	private String filter = "all"; // 기본값은 'all'
 	private String field; // 검색 필드 (예: subject, content, writer)
 	private String keyword; // 검색 키워드
 	private String startDate; // 시작 날짜
 	private String endDate; // 종료 날짜
-	private int currentPage = 1; // 현재 페이지 번호
+	private int currentPage =1 ; // 현재 페이지 번호
 	private int startNum; // 페이지 시작 번호
 	private int endNum; // 페이지 끝 번호
 	private int totalPage; // 총 페이지 수
@@ -101,7 +101,7 @@ public class SearchVO {
 		this.url = url;
 	}
 
-	public SearchVO(String filter, String field, String keyword, String startDate, String endDate, int currentPage,
+	public ReviewSearchVO(String filter, String field, String keyword, String startDate, String endDate, int currentPage,
 			int startNum, int endNum, int totalPage, int totalCount, String url) {
 		super();
 		this.filter = filter;
@@ -117,9 +117,8 @@ public class SearchVO {
 		this.url = url;
 	}
 
-	public SearchVO() {
+	public ReviewSearchVO() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override

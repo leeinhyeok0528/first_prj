@@ -1,3 +1,5 @@
+<%@page import="review.ReviewVO"%>
+<%@page import="review.AdminReviewDAO"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"   
     %>
@@ -116,7 +118,20 @@
     </div>
 
     <div class="content">
-        <!-- 한 줄로 데이터를 표시 -->
+<%
+AdminReviewDAO arDAO = AdminReviewDAO.getInstance();
+ReviewVO rVO = null;
+int reviewId= Integer.parseInt(request.getParameter("reviewId"));
+
+rVO = arDAO.selectOneReview(reviewId);
+ 
+request.setAttribute("rVO", rVO);
+request.setAttribute("reviewId", reviewId);
+%>
+
+
+
+
         <table class="titleTable">
             <tr>
                 <th>상품명</th>
@@ -138,9 +153,8 @@
                 <img src="http://localhost/first_prj/prj/images/img1.png" alt="리뷰 이미지">
             </div>
 
-            <!-- 텍스트 영역 -->
+            <!-- 리뷰내용 영역 -->
             <div class="reviewText">
-                답변자가 남긴 리뷰 텍스트가 여기에 표시됩니다. <br> 이 텍스트는 사용자가 입력한 내용이며, 여러 줄로 긴 리뷰를 남길 수 있습니다. <br> 리뷰는 길어질 수 있으며, 이 공간에서 텍스트와 이미지를 나란히 볼 수 있습니다.
             </div>
         </div>
 

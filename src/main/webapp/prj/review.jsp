@@ -1,8 +1,14 @@
+<%@page import="java.sql.SQLException"%>
+<%@page import="java.util.List"%>
+<%@page import="review.ReviewVO"%>
+<%@page import="review.AdminReviewDAO"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"   
     %>
-    
+    <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+    
+    <jsp:useBean id="sVO" class="review.ReviewSearchVO"/>
 <!DOCTYPE html>
 <html >
 
@@ -147,6 +153,12 @@
       .btn {
          margin-right: 10px;
       }
+      
+      
+       a{ color: #000000;text-decoration: none;font-size:16px  }
+ a:hover{ color: #858585; text-decoration: underline; font-size:16px  }
+      
+      
    </style>
    
    <script type="text/javascript">
@@ -154,9 +166,6 @@
 	    initializeDateFields();
 	    setupRadioButtons();
 	    setupSearchButton();
-	    $("tbody tr").click(function () {
-	        showPopUp();
-	    });
 	});
 
 // 페이지 로드시 날짜 기본 설정
@@ -219,17 +228,88 @@
 	}
 
 	//상세보기 팝업창 함수
-function showPopUp() {
-var left=window.screenX+350;
-var top= window.screenY+200;
-window.open("review_popup.jsp","review_popup","width=580,height=500, left="+left+",top="+top)
-
-
-}//showPopUp
+    function openPopup(reviewId) {
+        var left = window.screenX + 300;
+        var top = window.screenY + 200;
+        var width = 700;
+        var height = 700;
+        window.open("review_popup.jsp?reviewId=" + reviewId, "qna_popup", 
+        		"width=" + width + ",height=" + height + ",left=" + left + ",top=" + top
+);
 </script>
 </head>
 
 <body>
+
+
+<!-- 서버 측 코드 시작 -->
+<%
+	//게시판 리스트 구현
+		
+		//1.총 레코드 수 구하기
+		int totalCount=0;//총 레코드 수	
+		
+		AdminReviewDAO arDAO=AdminReviewDAO.getInstance();
+		try{
+			totalCount=arDAO.selectTotalCount(sVO);
+		}catch(SQLException se){
+			se.printStackTrace();
+		}
+		//2.한 화면에 보여줄 레코드의 수
+		int pageScale=10;
+		
+		//3.총 페이지 수
+		int totalPage=(int)Math.ceil((double)totalCount/pageScale);
+		
+		//4.검색의 시작번호를 구하기 ( pagination의 번호) [1][2][3]
+		String paramPage=request.getParameter("currentPage");
+
+		int currentPage=1;	
+		if(paramPage != null){
+			try{
+		currentPage=Integer.parseInt(paramPage);
+			}catch(NumberFormatException nfe){
+			}//end catch
+		}//end if
+		
+		int startNum=currentPage*pageScale-pageScale+1;//시작번호
+		//5. 끝번호 
+		int endNum=startNum+pageScale-1; //끝 번호
+		
+		sVO.setCurrentPage(currentPage);
+		sVO.setStartNum(startNum);
+		sVO.setEndNum(endNum);
+		sVO.setTotalPage(totalPage);
+		sVO.setTotalCount(totalCount);
+		
+		out.print( sVO );
+		
+		List<ReviewVO> listBoard=null;
+		try{
+			listBoard=arDAO.selectAllReview(); //시작번호, 끝 번호를 사용한 게시글 조회
+			
+			String tempContent="";
+			for(ReviewVO tempVO : listBoard){
+		tempContent=tempVO.getContent();
+		if(tempContent.length() > 30){
+			tempVO.setContent(tempContent.substring(0, 29)+"...");
+		}
+			}//end for
+			
+		}catch(SQLException se){
+			se.printStackTrace();
+		}//end catch
+		
+		pageContext.setAttribute("totalCount", totalCount);
+		pageContext.setAttribute("pageScale", pageScale);
+		pageContext.setAttribute("totalPage", totalPage);
+		pageContext.setAttribute("currentPage", currentPage);
+		pageContext.setAttribute("startNum", startNum);
+		pageContext.setAttribute("endNum", endNum); 
+		pageContext.setAttribute("listBoard", listBoard);
+	%>
+
+
 
    <!-- 상단 고정 헤더 -->
    <div class="header">
@@ -281,38 +361,31 @@ window.open("review_popup.jsp","review_popup","width=580,height=500, left="+left
          </form>
       </div>
       
-      <!-- 문의검색 결과 출력 div -->
+      <!-- 리뷰검색 결과 출력 div -->
      <div class="form">
                 <h5  class="form-group" style="border-bottom: 1px solid  #EEF0F4">검색결과 N건</h5>
 
    <table  class="table table-striped table-hover">
+   
       <thead> 
-      
       <tr>
-      <td>상품명</td>
-      <td>상품번호</td>
-      <td>작성자</td>
-      <td>등록일</td>
-      <td>리뷰글 번호</td>
+	      <td>번호</td>
+	      <td>상품명</td>
+	      <td>상품ID</td>
+	      <td>작성자ID</td>
+	      <td>등록일</td>
       </tr>
       </thead>
       <tbody>
-            <tr>
-      <td>상품명/예시</td>
-      <td>상품번호/예시</td>
-      <td>작성자/예시</td>
-      <td>등록일/예시</td>
-      <td>리뷰번호/예시</td>
-      </tr>
-            <tr>
-      <td>상품명/예시</td>
-      <td>상품번호/예시</td>
-      <td>작성자/예시</td>
-      <td>등록일/예시</td>
-      <td>리뷰번호/예시</td>
-      </tr>
-   
-      
+	 <c:forEach var="rVO" items="${listBoard }">
+	 <tr>
+	      <td>    <c:out value="${rVO.reviewId }"/> </td>
+		<td><a href="#" onclick="openPopup('${rVO.reviewId }')"   ></a></td>
+	      <td> <c:out value="${rVO.productId }"/>  </td>
+	      <td>  <c:out value="${rVO.userId }"/>  </td>
+	      <td><fmt:formatDate value="${rVO.createAt}" pattern="yyyy-MM-dd HH:mm"/></td>
+	 </tr>
+	 </c:forEach>      
       
       </tbody>
    </table>

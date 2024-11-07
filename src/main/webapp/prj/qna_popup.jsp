@@ -102,7 +102,7 @@
 
             if (iVO == null) {
                 out.println("<p>해당 ID로 데이터를 찾을 수 없습니다.</p>");
-            }
+            }//end if
         %>
 
         <c:if test="${not empty iVO}">
@@ -133,7 +133,7 @@
                         <c:when test="${not empty iVO.adminAd}">
                             <!-- 답변이 이미 있는 경우 -->
                             <div><c:out value="${iVO.adminAd}"/></div>
-                         <form method="post" action="adminAd_process.jsp" name="subitFrm">
+                         <form method="post" action="admin_inquiry_process.jsp" name="subitFrm">
 							    <input type="hidden" name="inquiryId" value="${inquiryId}">
 							    <div class="footer">
 							        <button type="submit" class="btn btn-success btn-sm delete-button" name="submitAction" value="delete">삭제</button>
@@ -144,7 +144,7 @@
                         </c:when>
                         <c:otherwise>
                             <!-- 답변이 없는 경우 폼 표시 -->
-                            <form method="post" action="adminAd_process.jsp" name="submitFrm">
+                            <form method="post" action="admin_inquiry_process.jsp" name="submitFrm">
 							    <input type="hidden" name="inquiryId" value="${inquiryId}">
 							    <textarea id="content" class="form-control" rows="7" placeholder="내용을 입력하세요" name="answer"></textarea>
 							    <div class="footer">

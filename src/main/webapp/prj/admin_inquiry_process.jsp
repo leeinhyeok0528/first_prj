@@ -1,4 +1,6 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" 
+info="문의에 대해 답변을 추가/삭제 하는 일"
+%>
 <%@ page import="java.sql.SQLException"%>
 <%@ page import="inquiry.InquiryVO"%>
 <%@ page import="inquiry.AdminInquiryDAO"%>

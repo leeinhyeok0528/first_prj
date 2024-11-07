@@ -1,4 +1,4 @@
-<%@page import="inquiry.SearchVO"%>
+<%-- <%@page import="inquiry.SearchVO"%>
 <%@page import="inquiry.InquiryVO"%>
 <%@page import="inquiry.AdminInquiryDAO"%>
 <%@page import="java.util.List"%>
@@ -118,7 +118,6 @@
 </div>
 
   <!-- 페이지네이션 -->
-  <nav aria-label="Page navigation">
       <ul class="pagination justify-content-center">
           <%
               // BoardUtil의 pagination 메소드 사용
@@ -126,6 +125,5 @@
               out.print(paginationHtml);
           %>
       </ul>
-  </nav>
 </body>
-</html>
+</html> --%>
