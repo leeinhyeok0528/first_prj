@@ -6,7 +6,7 @@
 <% request.setCharacterEncoding("UTF-8"); %>
 
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,25 +19,34 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 
        <script type="text/javascript">
-    $(function () {
+       $(function () {
 
-        // 삭제 버튼 이벤트
-        $(".delete-button").click(function (event) {
-            if (confirm("해당 문의를 삭제하시겠습니까?")) {
-                // 폼 제출
-                $(this).closest('form').submit();
-            }
-        });
+           // 삭제 버튼 이벤트
+           $(".delete-button").click(function (event) {
+               if (confirm("해당 문의를 삭제하시겠습니까?")) {
+                   // 폼 제출
+                   $(this).closest('form').submit();
+               }
+           });
 
-        // 닫기 버튼 이벤트
-        $("#close").click(function () {
-            self.close();
-        });
-        
-        
-        
-        
-    });
+           // 닫기 버튼 이벤트
+           $("#close").click(function () {
+               self.close();
+           });
+
+           // 수정 버튼 이벤트
+           $("#editButton").click(function () {
+               $("#answerDisplay").hide();    // 기존 답변 숨기기
+               $("#editForm").show();         // 수정 폼 표시
+           });
+
+           // 취소 버튼 이벤트
+           $("#cancelButton").click(function () {
+               $("#editForm").hide();         // 수정 폼 숨기기
+               $("#answerDisplay").show();    // 기존 답변 표시
+           });
+
+       });
     </script>
     <style>
         body, html {
@@ -79,7 +88,7 @@
 </head>
 
 <body>
-    <div class="header">문의 관리</div>
+    <div class="header">문의 상세보기</div>
     <div class="content">
         <%
             AdminInquiryDAO aiDAO = AdminInquiryDAO.getInstance();
@@ -126,39 +135,56 @@
             </div>
 
             <!-- 답변 등록 폼 -->
-        <div class="form-container">
-                <h5>답변</h5>
-                <div class="form-group">
-                    <c:choose>
-                        <c:when test="${not empty iVO.adminAd}">
-                            <!-- 답변이 이미 있는 경우 -->
-                            <div><c:out value="${iVO.adminAd}"/></div>
-                         <form method="post" action="admin_inquiry_process.jsp" name="subitFrm">
-							    <input type="hidden" name="inquiryId" value="${inquiryId}">
-							    <div class="footer">
-							        <button type="submit" class="btn btn-success btn-sm delete-button" name="submitAction" value="delete">삭제</button>
-							        <button type="button" class="btn btn-light btn-sm" id="close">닫기</button>
-							    </div>  
-							</form>
+         <div class="form-container">
+            <h5>답변</h5>
+            <div class="form-group">
+                <c:choose>
+                    <c:when test="${not empty iVO.adminAd}">
+                        <!-- 답변이 이미 있는 경우 -->
+                        <!-- 기존 답변 표시 -->
+                        <div id="answerDisplay"><c:out value="${iVO.adminAd}"/></div>
 
-                        </c:when>
-                        <c:otherwise>
-                            <!-- 답변이 없는 경우 폼 표시 -->
-                            <form method="post" action="admin_inquiry_process.jsp" name="submitFrm">
-							    <input type="hidden" name="inquiryId" value="${inquiryId}">
-							    <textarea id="content" class="form-control" rows="7" placeholder="내용을 입력하세요" name="answer"></textarea>
-							    <div class="footer">
-							        <button type="submit" class="btn btn-danger btn-sm" id="register" name="submitAction" value="register">등록</button>
-							        <button type="submit" class="btn btn-success btn-sm delete-button" name="submitAction" id="delete" value="delete">삭제</button>
-							        <button type="button" class="btn btn-light btn-sm" id="close">닫기</button>
-							    </div>  
-							</form>
-                        </c:otherwise>
-                    </c:choose>
-                </div>
+                        <!-- 수정 및 삭제 버튼 -->
+                        <div class="footer">
+                            <form method="post" action="admin_inquiry_process.jsp">
+                                <input type="hidden" name="inquiryId" value="${inquiryId}">
+                                <button type="button" class="btn btn-info btn-sm" id="editButton">수정</button>
+                                <button type="submit" class="btn btn-danger btn-sm delete-button" name="submitAction" value="delete">삭제</button>
+                                <button type="button" class="btn btn-light btn-sm" id="close">닫기</button>
+                            </form>
+                        </div>
+
+                        <!-- 수정 폼 (초기에 숨김 처리) -->
+                        <div id="editForm" style="display: none; margin-top: 20px;">
+                            <form method="post" action="admin_inquiry_process.jsp">
+                                <input type="hidden" name="inquiryId" value="${inquiryId}">
+                                <input type="hidden" name="submitAction" value="update">
+                                <textarea id="editContent" class="form-control" rows="7" name="answer">${iVO.adminAd}</textarea>
+                                <div class="footer">
+                                    <button type="submit" class="btn btn-success btn-sm">저장</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="cancelButton">취소</button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </c:when>
+                    <c:otherwise>
+                        <!-- 답변이 없는 경우 폼 표시 -->
+                        <form method="post" action="admin_inquiry_process.jsp" name="submitFrm">
+                            <input type="hidden" name="inquiryId" value="${inquiryId}">
+                            <textarea id="content" class="form-control" rows="7" placeholder="내용을 입력하세요" name="answer"></textarea>
+                            <div class="footer">
+                                <button type="submit" class="btn btn-success btn-sm" id="register" name="submitAction" value="register">등록</button>
+                                <button type="submit" class="btn btn-danger btn-sm delete-button" name="submitAction" id="delete" value="delete">삭제</button>
+                                <button type="button" class="btn btn-light btn-sm" id="close">닫기</button>
+                            </div>
+                        </form>
+                    </c:otherwise>
+                </c:choose>
             </div>
-        </c:if>
-    </div>
+        </div>
+    </c:if>
+  </div>
 </body>
 </html>
 

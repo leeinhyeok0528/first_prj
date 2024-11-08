@@ -9,6 +9,7 @@
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     
     <jsp:useBean id="sVO" class="review.ReviewSearchVO"/>
+    <jsp:setProperty  name="sVo"  property="*" /> 
 <!DOCTYPE html>
 <html >
 
@@ -161,83 +162,144 @@
       
    </style>
    
-   <script type="text/javascript">
-   $(document).ready(function () {
-	    initializeDateFields();
-	    setupRadioButtons();
-	    setupSearchButton();
-	});
+</head>
+    <script type="text/javascript">
+    $(document).ready(function () {
+        defaultDate();
+        dateRadio();
+        setSearchBtn();
+        setupDateInputs();
+        setupResetButton();
+    });
 
-// 페이지 로드시 날짜 기본 설정
-	function initializeDateFields() {
-	    const today = new Date();
-	    const formattedToday = formatDate(today);
-	    $('#startDate').val(formattedToday);
-	    $('#endDate').val(formattedToday);
-	    $('#btnradio1').prop('checked', true); // 오늘을 기본 선택으로 설정
-	}
+    // 페이지 로드시 날짜 기본 설정
+function defaultDate() {
+    const today = new Date();
+    const formattedToday = formatDate(today);
 
-	// 날짜 포맷팅 함수 (yyyy-mm-dd 형식으로 변환)
-	function formatDate(date) {
-	    const year = date.getFullYear();
-	    const month = String(date.getMonth() + 1).padStart(2, '0');
-	    const day = String(date.getDate()).padStart(2, '0');
-	    return year + '-' + month + '-' + day;
-	}
+    const selectedDateOption = $('input[name="date"]:checked').val();
 
-	// 라디오 버튼 설정 함수
-	function setupRadioButtons() {
-	    $('input[name="date"]').on('change', function () {
-	        const today = new Date();
-	        let startDate = new Date(today);
-	        switch (this.id) {
-	            case 'btnradio1':
-	                // 오늘
-	                startDate = today;
-	                break;
-	            case 'btnradio2':
-	                // 3일 전
-	                startDate.setDate(today.getDate() - 3);
-	                break;
-	            case 'btnradio3':
-	                // 1주일 전
-	                startDate.setDate(today.getDate() - 7);
-	                break;
-	            case 'btnradio4':
-	                // 1달 전
-	                startDate.setMonth(today.getMonth() - 1);
-	                break;
-	        }
-	        setDateRange(startDate, today);
-	    });
-	}
+    if (selectedDateOption === 'all') {
+        $('#startDate').val('');
+        $('#endDate').val('');
+    } else {
+        // startDate와 endDate 값이 있을 경우 해당 값으로 설정
+        <% if (sVO.getStartDate() != null && !"".equals(sVO.getStartDate())) { %>
+            $('#startDate').val('<%= sVO.getStartDate() %>');
+        <% } else { %>
+            $('#startDate').val(formattedToday);
+        <% } %>
+        <% if (sVO.getEndDate() != null && !"".equals(sVO.getEndDate())) { %>
+            $('#endDate').val('<%= sVO.getEndDate() %>');
+        <% } else { %>
+            $('#endDate').val(formattedToday);
+        <% } %>
+    }
+}
+    // 날짜 포맷팅 함수 (yyyy-mm-dd 형식으로 변환)
+    function formatDate(date) {
+        return date.toISOString().split('T')[0];
+    }
 
-	// 날짜 범위 설정 함수
-	function setDateRange(startDate, endDate) {
-	    $('#startDate').val(formatDate(startDate));
-	    $('#endDate').val(formatDate(endDate));
-	}
+ // 라디오 버튼 설정 함수
+    function dateRadio() {
+        $('input[name="date"]').change(function () {
+            const selected = $(this).val();
+            switch (selected) {
+                case 'all':
+                    $('#startDate').val('');
+                    $('#endDate').val('');
+                    break;
+                case 'today':
+                    setDateRange(0);
+                    break;
+                case 'last3days':
+                    setDateRange(2); // 오늘 포함 3일 전
+                    break;
+                case 'lastweek':
+                    setDateRange(6); // 오늘 포함 7일 전
+                    break;
+                case 'lastmonth':
+                    setDateRange(29); // 오늘 포함 30일 전
+                    break;
+            }
+        });
+    }
+    // 날짜 범위 설정 함수
+    function setDateRange(daysAgo) {
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - daysAgo);
 
-	// 검색 버튼 설정 함수
-	function setupSearchButton() {
-	    $('#searchBtn').on('click', function () {
-	        const startDate = $('#startDate').val();
-	        const endDate = $('#endDate').val();
-	        alert('설정된 날짜 범위: ' + startDate + ' ~ ' + endDate);
-	    });
-	}
+        $('#startDate').val(formatDate(startDate));
+        $('#endDate').val(formatDate(endDate));
+    }
 
-	//상세보기 팝업창 함수
+    // date input 필드 설정 함수
+    function setupDateInputs() {
+        $('#startDate, #endDate').on('change', function() {
+            // date input이 수동으로 변경되면 라디오 버튼 선택 해제
+            $('input[name="date"]').prop('checked', false);
+        });
+    }
+
+    // 검색 버튼 클릭 시 폼 제출
+    function setSearchBtn() {
+        $('#searchBtn').click(function () {
+            const startDate = $('#startDate').val();
+            const endDate = $('#endDate').val();
+
+            if (startDate && endDate && startDate > endDate) {
+                alert("시작일은 종료일보다 늦을 수 없습니다.");
+                return;
+            }
+
+            // currentPage를 1로 설정
+            $('#currentPage').val(1);
+
+            $('#searchFrm').submit();
+        });
+    }
+
+    // Reset 버튼 설정 함수
+function setupResetButton() {
+    $('input[type="reset"]').click(function(e) {
+        e.preventDefault(); // 기본 reset 동작 방지
+
+        // 폼 초기화
+        $('#filter').val('all');
+        $('#keyword').val('');
+        $('#field').val('0');
+
+        // 날짜 초기화 (startDate와 endDate를 빈 문자열로 설정)
+        $('#startDate').val('');
+        $('#endDate').val('');
+
+        // 라디오 버튼 '전체' 선택
+        $('#btnradio0').prop('checked', true);
+        $('input[name="date"]').not('#btnradio0').prop('checked', false);
+
+        // currentPage 초기화
+        $('#currentPage').val(1);
+
+        // 폼 제출하여 전체 목록 조회
+        $('#searchFrm').submit();
+    });
+}
+    // 상세보기 팝업창 함수
     function openPopup(reviewId) {
         var left = window.screenX + 300;
         var top = window.screenY + 200;
         var width = 700;
         var height = 700;
-        window.open("review_popup.jsp?reviewId=" + reviewId, "qna_popup", 
-        		"width=" + width + ",height=" + height + ",left=" + left + ",top=" + top
-);
-</script>
+        window.open("review_popup.jsp?reviewId=" + reviewId, "review_popup", 
+            "width=" + width + ",height=" + height + ",left=" + left + ",top=" + top
+        );
+    }
+
+    </script>
 </head>
+
 
 <body>
 
