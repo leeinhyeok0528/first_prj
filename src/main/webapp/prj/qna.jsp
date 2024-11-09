@@ -419,11 +419,11 @@ function setupResetButton() {
                         <option value="1" <c:if test="${sVO.field eq '1'}">selected</c:if>>내용</option>
                         <option value="2" <c:if test="${sVO.field eq '2'}">selected</c:if>>작성자</option>
                     </select>
-                    <input type="text" name="keyword" id="keyword" style="width: 200px" value="${sVO.keyword}"/>
+                    <input type="text" name="keyword" id="keyword" style="width: 250px" value="${sVO.keyword}"   placeholder="검색할 키워드를 입력하세요" />
                 </div>
 
                 <div class="form-group" style="justify-content: center; margin-top: 50px;">
-                    <input type="button" id="searchBtn" class="btn btn-success" value="검색">
+                    <input type="button" id="searchBtn" class="btn btn-success" value="검색" >
                     <input type="reset" class="btn btn-light" value="옵션 초기화">
                 </div>
             </form>
@@ -452,8 +452,7 @@ function setupResetButton() {
                             <tr>
                                 <td><c:out value="${ totalCount - (currentPage - 1) * pageScale - i.index }"/></td>
                                 <td><c:out value="${iVO.category}"/></td>
-                                <td><a href="#" onclick="openPopup('${iVO.inquiryId}')">
-                                    <c:out value="${iVO.title}"/></a></td>
+                                <td><a href="#" onclick="openPopup('${iVO.inquiryId}')"> <c:out value="${iVO.title}"/></a></td>
                                 <td><c:out value="${iVO.status}"/></td>
                                 <td><fmt:formatDate value="${iVO.createAt}" pattern="yyyy-MM-dd HH:mm"/></td>
                                 <td><c:out value="${iVO.userId}"/></td>
@@ -461,6 +460,8 @@ function setupResetButton() {
                         </c:forEach>
                     </tbody>
                 </table>
+                   <p style="color: E9ECEF ;font-size: 12px ">클릭시 문의 상세보기 페이지가 나타납니다.</p>
+                
             </div>
 
             <!-- 페이지네이션 -->

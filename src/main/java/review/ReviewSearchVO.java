@@ -2,7 +2,7 @@ package review;
 
 public class ReviewSearchVO {
 	private String filter = "all"; // 기본값은 'all'
-	private String field; // 검색 필드 (예: subject, content, writer)
+	private String field="0"; // 검색 필드 (예: subject, content, writer)
 	private String keyword; // 검색 키워드
 	private String startDate; // 시작 날짜
 	private String endDate; // 종료 날짜

@@ -24,7 +24,7 @@ info="문의에 대해 답변을 추가/삭제 하는 일"
     if(action == null){
 	    
     	
-    }
+    }//end if
     
     
     

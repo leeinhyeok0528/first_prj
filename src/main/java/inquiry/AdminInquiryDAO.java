@@ -14,14 +14,14 @@ public class AdminInquiryDAO {
 	private static AdminInquiryDAO aiDAO;
 
 	private AdminInquiryDAO() {
-	}
+	}//constructor
 
 	public static AdminInquiryDAO getInstance() {
 		if (aiDAO == null) {
 			aiDAO = new AdminInquiryDAO();
-		}
+		}//end if
 		return aiDAO;
-	}
+	}//getInstance
 
 	/**
 	 * 총 게시물의 수 검색 (필터 및 날짜 필터 적용)

@@ -1,3 +1,4 @@
+<%@page import="review.ReviewUtil"%>
 <%@page import="java.sql.SQLException"%>
 <%@page import="java.util.List"%>
 <%@page import="review.ReviewVO"%>
@@ -9,7 +10,7 @@
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
     
     <jsp:useBean id="sVO" class="review.ReviewSearchVO"/>
-    <jsp:setProperty  name="sVo"  property="*" /> 
+    <jsp:setProperty  name="sVO"  property="*" /> 
 <!DOCTYPE html>
 <html >
 
@@ -295,7 +296,7 @@ function setupResetButton() {
         window.open("review_popup.jsp?reviewId=" + reviewId, "review_popup", 
             "width=" + width + ",height=" + height + ",left=" + left + ",top=" + top
         );
-    }
+    }//openPopup
 
     </script>
 </head>
@@ -344,18 +345,23 @@ function setupResetButton() {
 		sVO.setTotalPage(totalPage);
 		sVO.setTotalCount(totalCount);
 		
-		out.print( sVO );
 		
 		List<ReviewVO> listBoard=null;
 		try{
 			listBoard=arDAO.selectAllReview(); //시작번호, 끝 번호를 사용한 게시글 조회
 			
 			String tempContent="";
+			String tempPrdName = "";
 			for(ReviewVO tempVO : listBoard){
 		tempContent=tempVO.getContent();
-		if(tempContent.length() > 30){
-			tempVO.setContent(tempContent.substring(0, 29)+"...");
+		tempPrdName= tempVO.getProductName();
+		if(tempContent.length() > 15){
+			tempVO.setContent(tempContent.substring(0, 14)+"...");
 		}
+		if(tempPrdName.length()>15){
+			tempVO.setProductName(tempPrdName.substring(0,14) +"...");
+		}
+		
 			}//end for
 			
 		}catch(SQLException se){
@@ -381,7 +387,7 @@ function setupResetButton() {
 
   <!-- 좌측 고정 사이드바 -->
    <div class="sidebar">
-     <c:import url="http://localhost/first_prj/prj/sidebar.jsp"></c:import>
+     <c:import url="http://localhost/first_prj/prj/sidebar.jsp"/>
    </div>
 
    <!-- 메인 콘텐츠 영역 -->
@@ -392,40 +398,70 @@ function setupResetButton() {
       </div>
 
       <!-- 새로운 검색 필터 폼 -->
-      <div class="form">
-         <form>
-         
-  <div class="form-group"  >
-               <label for="date-range" >리뷰 작성일</label>
-              <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
-					  <input type="radio" class="btn-check" name="date" id="btnradio1" autocomplete="off">
-					  <label class="btn btn-outline-secondary  btn-sm" for="btnradio1"  style="margin-right: 0px">오늘</label>
-					
-					  <input type="radio" class="btn-check" name="date" id="btnradio2" autocomplete="off">
-					  <label class="btn btn-outline-secondary  btn-sm" for="btnradio2"  style="margin-right: 0px">3일</label>
-					
-					  <input type="radio" class="btn-check" name="date" id="btnradio3" autocomplete="off">
-					  <label class="btn btn-outline-secondary  btn-sm" for="btnradio3"  style="margin-right: 0px">1주일</label>
-					  
-					  <input type="radio" class="btn-check" name="date" id="btnradio4" autocomplete="off">
-					  <label class="btn btn-outline-secondary btn-sm" for="btnradio4">1달</label>
-			</div>
-               <input type="date" class="form-control date" id="startDate" >~
-               <input type="date" class="form-control date" id="endDate" >
-            </div>
+     <!-- 검색 필터 폼 -->
+        <div class="form">
+            <form method="GET" action="review.jsp" name="searchFrm" id="searchFrm" >
+                <!-- 현재 페이지를 관리하기 위한 숨겨진 필드 -->
+                <input type="hidden" id="currentPage" name="currentPage" value="1">
+                
+                <div class="form-group">
+                    <label for="filedr">유형</label>
+                    <select id="filed" name="field" class="form-select">
+                        <option value="0" <c:if test="${sVO.field eq '0'}">selected</c:if>>전체</option>
+                        <option value="1" <c:if test="${sVO.field eq '1'}">selected</c:if>>상품명</option>
+                        <option value="2" <c:if test="${sVO.field eq '2'}">selected</c:if>>작성자</option>
+                        <option value="3" <c:if test="${sVO.field eq '3'}">selected</c:if>>내용</option>
+                    </select>
+                </div>
 
+                <div class="form-group">
+                    <label for="date-range">리뷰작성일</label>
+                    <div class="btn-group" role="group">
+                        <!-- 오늘 -->
+                          <!-- 전체 -->
+				      <input type="radio" class="btn-check" name="date" id="btnradio0" value="all" autocomplete="off"
+        			    <c:if test="${param.date eq 'all' || empty param.date}">checked</c:if>>
+      				  <label class="btn btn-outline-secondary btn-sm" for="btnradio0" style="margin-right: 0px;width: 70px">전체</label>
+      		                 
+                        <input type="radio" class="btn-check" name="date" id="btnradio1" value="today" autocomplete="off"
+				            <c:if test="${param.date eq 'today'}">checked</c:if>>
+				        <label class="btn btn-outline-secondary btn-sm" for="btnradio1" style="margin-right: 0px;width: 70px">1일</label>
+                        <!-- 지난 3일 -->
+                        <input type="radio" class="btn-check" name="date" id="btnradio2" value="last3days" autocomplete="off"
+                            <c:if test="${param.date eq 'last3days'}">checked</c:if>>
+                        <label class="btn btn-outline-secondary btn-sm" for="btnradio2" style="margin-right: 0px;width: 70px">3일</label>
 
- <div class="form-group" style="justify-content: center; border-bottom: 1px solid #EEF0F4;margin-top: 50px;">
-                 <input type="button"  id="searchBtn"  class="btn btn-success"   value="검색" >
-               <input type="reset" class="btn btn-light" value="옵션 초기화">
-            </div>
+                        <!-- 지난 1주일 -->
+                        <input type="radio" class="btn-check" name="date" id="btnradio3" value="lastweek" autocomplete="off"
+                            <c:if test="${param.date eq 'lastweek'}">checked</c:if>>
+                        <label class="btn btn-outline-secondary btn-sm" for="btnradio3" style="margin-right: 0px;width: 70px">1주일</label>
 
-         </form>
-      </div>
+                        <!-- 지난 1달 -->
+                        <input type="radio" class="btn-check" name="date" id="btnradio4" value="lastmonth" autocomplete="off"
+                            <c:if test="${param.date eq 'lastmonth'}">checked</c:if>>
+                        <label class="btn btn-outline-secondary btn-sm" for="btnradio4" style="margin-right: 0px;width: 70px">1달</label>
+                    </div>
+                   	  <input type="date" id="startDate" name="startDate" class="form-control date" value="${sVO.startDate}"> ~
+  					  <input type="date" id="endDate" name="endDate" class="form-control date" value="${sVO.endDate}">
+                </div>
+
+                <div class="form-group">
+                    <label for="keyword">검색</label>
+                    <input type="text" name="keyword" id="keyword" style="width: 250px" value="${sVO.keyword}"  placeholder="검색할 키워드를 입력하세요" />
+                </div>
+
+                <div class="form-group" style="justify-content: center; margin-top: 50px;">
+                    <input type="button" id="searchBtn" class="btn btn-success" value="검색">
+                    <input type="reset" class="btn btn-light" value="옵션 초기화">
+                </div>
+            </form>
+        </div>
+
       
       <!-- 리뷰검색 결과 출력 div -->
      <div class="form">
-                <h5  class="form-group" style="border-bottom: 1px solid  #EEF0F4">검색결과 N건</h5>
+                <h5  class="form-group" style="border-bottom: 1px solid  #EEF0F4"> 검색결과: <c:out value="${sVO.totalCount }"/> 건</h5>
+                <c:out value="${sVO }"></c:out>
 
    <table  class="table table-striped table-hover">
    
@@ -433,17 +469,17 @@ function setupResetButton() {
       <tr>
 	      <td>번호</td>
 	      <td>상품명</td>
-	      <td>상품ID</td>
+	      <td>내용</td>
 	      <td>작성자ID</td>
 	      <td>등록일</td>
       </tr>
       </thead>
       <tbody>
-	 <c:forEach var="rVO" items="${listBoard }">
+	 <c:forEach var="rVO" items="${listBoard }" varStatus="i">
 	 <tr>
-	      <td>    <c:out value="${rVO.reviewId }"/> </td>
-		<td><a href="#" onclick="openPopup('${rVO.reviewId }')"   ></a></td>
-	      <td> <c:out value="${rVO.productId }"/>  </td>
+	      <td>    <c:out value="${ totalCount - (currentPage - 1) * pageScale - i.index }"/></td>
+      	  <td><a href="#" onclick="openPopup('${rVO.reviewId}')"> <c:out value="${rVO.productName}"/></a></td>
+	      <td>  <c:out value="${rVO.content }"></c:out>  </td>
 	      <td>  <c:out value="${rVO.userId }"/>  </td>
 	      <td><fmt:formatDate value="${rVO.createAt}" pattern="yyyy-MM-dd HH:mm"/></td>
 	 </tr>
@@ -452,7 +488,16 @@ function setupResetButton() {
       </tbody>
    </table>
      		
-   <p style="color: E9ECEF">클릭시 리뷰 상세보기 페이지가 나타납니다.</p>
+   <p style="color: E9ECEF;font-size: 12px">클릭시 리뷰 상세보기 페이지가 나타납니다.</p>
+   
+       <!-- 페이지네이션 -->
+            <div id="pagination" style="text-align: center">
+                <% sVO.setUrl("review.jsp"); %>
+                <%= new ReviewUtil().pagination(sVO) %>
+            </div>
+   
+   
+   
    
 </div>
 
