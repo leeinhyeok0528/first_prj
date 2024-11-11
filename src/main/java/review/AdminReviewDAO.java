@@ -93,8 +93,10 @@ public class AdminReviewDAO {
             // 바인드 변수에 값 설정
             if (sVO.getStartDate() != null && sVO.getEndDate() != null &&
                 !sVO.getStartDate().isEmpty() && !sVO.getEndDate().isEmpty()) {
-                pstmt.setDate(paramIndex++, java.sql.Date.valueOf(sVO.getStartDate()));
-                pstmt.setDate(paramIndex++, java.sql.Date.valueOf(sVO.getEndDate()));
+                // 시작 날짜는 하루의 시작 시간으로 설정
+                pstmt.setTimestamp(paramIndex++, java.sql.Timestamp.valueOf(sVO.getStartDate() + " 00:00:00"));
+                // 종료 날짜는 하루의 끝 시간으로 설정
+                pstmt.setTimestamp(paramIndex++, java.sql.Timestamp.valueOf(sVO.getEndDate() + " 23:59:59"));
             }
 
             if (sVO.getFilter() != null && !"".equals(sVO.getFilter()) && !"all".equalsIgnoreCase(sVO.getFilter())) {
@@ -127,7 +129,6 @@ public class AdminReviewDAO {
         return totalCount;
     }
 
-
     public List<ReviewVO> selectAllReview(ReviewSearchVO sVO) throws SQLException {
         List<ReviewVO> reviewList = new ArrayList<>();
         Connection con = null;
@@ -155,8 +156,10 @@ public class AdminReviewDAO {
             if (sVO.getStartDate() != null && sVO.getEndDate() != null &&
                     !sVO.getStartDate().isEmpty() && !sVO.getEndDate().isEmpty()) {
                 conditions.add("r.created_at BETWEEN ? AND ?");
-                parameters.add(java.sql.Date.valueOf(sVO.getStartDate()));
-                parameters.add(java.sql.Date.valueOf(sVO.getEndDate()));
+                // 시작 날짜는 하루의 시작 시간으로 설정
+                parameters.add(java.sql.Timestamp.valueOf(sVO.getStartDate() + " 00:00:00"));
+                // 종료 날짜는 하루의 끝 시간으로 설정
+                parameters.add(java.sql.Timestamp.valueOf(sVO.getEndDate() + " 23:59:59"));
             }
 
             // 검색 조건
@@ -199,8 +202,8 @@ public class AdminReviewDAO {
             // 파라미터 바인딩
             int paramIndex = 1;
             for (Object param : parameters) {
-                if (param instanceof java.sql.Date) {
-                    pstmt.setDate(paramIndex++, (java.sql.Date) param);
+                if (param instanceof java.sql.Timestamp) {
+                    pstmt.setTimestamp(paramIndex++, (java.sql.Timestamp) param);
                 } else {
                     pstmt.setString(paramIndex++, (String) param);
                 }
@@ -240,6 +243,7 @@ public class AdminReviewDAO {
 
         return reviewList;
     }
+
 
     public ReviewVO selectOneReview(int reviewId) throws SQLException {
         ReviewVO rVO = null;
