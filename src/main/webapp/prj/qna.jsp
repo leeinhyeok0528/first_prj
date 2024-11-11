@@ -292,9 +292,9 @@ function setupResetButton() {
     // 1. 총 레코드 수 구하기
     int totalCount = 0; // 총 레코드 수  
     
-    AdminInquiryDAO arDAO = AdminInquiryDAO.getInstance();
+    AdminInquiryDAO aiDAO = AdminInquiryDAO.getInstance();
     try {
-        totalCount = arDAO.selectTotalCount(sVO);
+        totalCount = aiDAO.selectTotalCount(sVO);
     } catch (SQLException se) {
         se.printStackTrace();
     }
@@ -327,7 +327,7 @@ function setupResetButton() {
     
     List<InquiryVO> listBoard = null;
     try {
-        listBoard = arDAO.selectAllInquiry(sVO); // 시작번호, 끝 번호를 사용한 게시글 조회
+        listBoard = aiDAO.selectAllInquiry(sVO); // 시작번호, 끝 번호를 사용한 게시글 조회
         
         String tempTitle = "";
         for (InquiryVO tempVO : listBoard) {
@@ -419,7 +419,7 @@ function setupResetButton() {
                         <option value="1" <c:if test="${sVO.field eq '1'}">selected</c:if>>내용</option>
                         <option value="2" <c:if test="${sVO.field eq '2'}">selected</c:if>>작성자</option>
                     </select>
-                    <input type="text" name="keyword" id="keyword" style="width: 250px" value="${sVO.keyword}"   placeholder="검색할 키워드를 입력하세요" />
+                    <input type="text" name="keyword" id="keyword" style="width: 250px" value="${sVO.keyword}" class="form-control"   placeholder="검색할 키워드를 입력하세요" />
                 </div>
 
                 <div class="form-group" style="justify-content: center; margin-top: 50px;">
@@ -437,6 +437,9 @@ function setupResetButton() {
                     검색결과 : <c:out value="${sVO.totalCount}"/> 건<c:out value="${sVO}"/> 
                 </h5>
                 <table class="table table-striped table-hover">
+                 <c:if test="${empty listBoard }">
+   					<tr> <td colspan="5" style="text-align: center;"> <strong>해당 조건에 맞는 검색 결과가 없습니다</strong>  </td></tr>
+   				</c:if>		
                     <thead style="font-size: 20px;">
                         <tr>
                             <td>번호</td>

@@ -148,7 +148,6 @@ body, html {
 	// 페이지가 로드되면 실행될 작업
 	$(function() {
 		dayChart(); // 차트를 생성하는 함수를 호출
-		monthlyChart();
 	})//ready
 
 	function dayChart() {
@@ -186,42 +185,6 @@ body, html {
 			}
 		});
 	}//dayChart
-
-	function monthlyChart() {
-		// #myChart라는 id를 가진 <canvas> 요소를 선택하고, 2D 그래픽 컨텍스트를 가져옴
-		let mChart = document.querySelector('#monthlyChart').getContext('2d');
-
-		// Chart 객체 생성: 이 객체가 실제로 차트를 그리며, 다양한 차트 유형과 데이터를 지원함
-		new Chart(mChart, {
-			type : 'bar', // 차트의 타입을 설정 ('bar': 막대 차트, 'line': 선 차트, 'pie': 파이 차트 등)
-
-			// 차트에 사용할 데이터 설정
-			data : {
-				labels : [ 'Month1', 'Month2', 'Month3', 'Month4', 'Month5',
-						'Month6' ], // X축에 표시될 항목 이름(카테고리)
-				datasets : [ {
-					label : '월별 매출', // 데이터셋에 대한 설명 (차트의 범례에 표시됨)
-					data : [ 10, 19, 13, 15, 12, 13 ], // 각 카테고리에 해당하는 매출 데이터 (Y축 값)
-					borderWidth : 1
-				// 막대의 테두리 두께를 설정
-				}, ]
-			},
-
-			// 차트의 옵션을 설정하는 부분 (여기서는 축, 스타일 등을 설정)
-			options : {
-				scales : {
-					// Y축의 설정을 정의
-					y : {
-						beginAtZero : true
-					// Y축 값이 0에서 시작하도록 설정 (false일 경우 최소값에서 시작)
-					}
-				},
-				hover : {
-					mode : 'index' // hover 시 동작 방식을 설정
-				}
-			}
-		});
-	}//monthlyChart
 </script>
 
 

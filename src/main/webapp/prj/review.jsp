@@ -195,12 +195,12 @@ function defaultDate() {
         <% } else { %>
             $('#endDate').val(formattedToday);
         <% } %>
-    }
-}
+    }//end else
+}//defaultDate
     // 날짜 포맷팅 함수 (yyyy-mm-dd 형식으로 변환)
     function formatDate(date) {
         return date.toISOString().split('T')[0];
-    }
+    }//format date
 
  // 라디오 버튼 설정 함수
     function dateRadio() {
@@ -223,7 +223,7 @@ function defaultDate() {
                 case 'lastmonth':
                     setDateRange(29); // 오늘 포함 30일 전
                     break;
-            }
+            }//switch
         });
     }
     // 날짜 범위 설정 함수
@@ -304,78 +304,68 @@ function setupResetButton() {
 
 <body>
 
-
 <!-- 서버 측 코드 시작 -->
 <%
-	//게시판 리스트 구현
-		
-		//1.총 레코드 수 구하기
-		int totalCount=0;//총 레코드 수	
-		
-		AdminReviewDAO arDAO=AdminReviewDAO.getInstance();
-		try{
-			totalCount=arDAO.selectTotalCount(sVO);
-		}catch(SQLException se){
-			se.printStackTrace();
-		}
-		//2.한 화면에 보여줄 레코드의 수
-		int pageScale=10;
-		
-		//3.총 페이지 수
-		int totalPage=(int)Math.ceil((double)totalCount/pageScale);
-		
-		//4.검색의 시작번호를 구하기 ( pagination의 번호) [1][2][3]
-		String paramPage=request.getParameter("currentPage");
+    // 게시판 리스트 구현
+        
+    // 1. 총 레코드 수 구하기
+    int totalCount = 0; // 총 레코드 수  
+    
+    AdminReviewDAO arDAO = AdminReviewDAO.getInstance();
+    try {
+        totalCount = arDAO.selectTotalCount(sVO);
+    } catch (SQLException se) {
+        se.printStackTrace();
+    }
+    // 2. 한 화면에 보여줄 레코드의 수
+    int pageScale = 10;
+    
+    // 3. 총 페이지 수
+    int totalPage = (int)Math.ceil((double)totalCount / pageScale);
+    
+    // 4. 검색의 시작번호를 구하기 (pagination의 번호) [1][2][3]
+    String paramPage = request.getParameter("currentPage");
 
-		int currentPage=1;	
-		if(paramPage != null){
-			try{
-		currentPage=Integer.parseInt(paramPage);
-			}catch(NumberFormatException nfe){
-			}//end catch
-		}//end if
-		
-		int startNum=currentPage*pageScale-pageScale+1;//시작번호
-		//5. 끝번호 
-		int endNum=startNum+pageScale-1; //끝 번호
-		
-		sVO.setCurrentPage(currentPage);
-		sVO.setStartNum(startNum);
-		sVO.setEndNum(endNum);
-		sVO.setTotalPage(totalPage);
-		sVO.setTotalCount(totalCount);
-		
-		
-		List<ReviewVO> listBoard=null;
-		try{
-			listBoard=arDAO.selectAllReview(); //시작번호, 끝 번호를 사용한 게시글 조회
-			
-			String tempContent="";
-			String tempPrdName = "";
-			for(ReviewVO tempVO : listBoard){
-		tempContent=tempVO.getContent();
-		tempPrdName= tempVO.getProductName();
-		if(tempContent.length() > 15){
-			tempVO.setContent(tempContent.substring(0, 14)+"...");
-		}
-		if(tempPrdName.length()>15){
-			tempVO.setProductName(tempPrdName.substring(0,14) +"...");
-		}
-		
-			}//end for
-			
-		}catch(SQLException se){
-			se.printStackTrace();
-		}//end catch
-		
-		pageContext.setAttribute("totalCount", totalCount);
-		pageContext.setAttribute("pageScale", pageScale);
-		pageContext.setAttribute("totalPage", totalPage);
-		pageContext.setAttribute("currentPage", currentPage);
-		pageContext.setAttribute("startNum", startNum);
-		pageContext.setAttribute("endNum", endNum); 
-		pageContext.setAttribute("listBoard", listBoard);
-	%>
+    int currentPage = 1;    
+    if (paramPage != null) {
+        try {
+            currentPage = Integer.parseInt(paramPage);
+        } catch (NumberFormatException nfe) {
+        }
+    }
+    
+    int startNum = currentPage * pageScale - pageScale + 1; // 시작번호
+    // 5. 끝번호 
+    int endNum = startNum + pageScale - 1; // 끝 번호
+    
+    sVO.setCurrentPage(currentPage);
+    sVO.setStartNum(startNum);
+    sVO.setEndNum(endNum);
+    sVO.setTotalPage(totalPage);
+    sVO.setTotalCount(totalCount);
+    
+    List<ReviewVO> listBoard = null;
+    try {
+        listBoard = arDAO.selectAllReview(sVO); // 시작번호, 끝 번호를 사용한 게시글 조회
+        
+        String tempTitle = "";
+        for (ReviewVO tempVO : listBoard) {
+            tempTitle = tempVO.getContent();
+            if (tempTitle.length() > 30) {
+                tempVO.setContent(tempTitle.substring(0, 29) + "...");
+            }
+        }
+        
+    } catch (SQLException se) {
+        se.printStackTrace();
+    }
+    
+    pageContext.setAttribute("totalCount", totalCount);
+    pageContext.setAttribute("pageScale", pageScale);
+    pageContext.setAttribute("totalPage", totalPage);
+    pageContext.setAttribute("currentPage", currentPage);
+    pageContext.setAttribute("listBoard", listBoard);
+ %>
 
 
 
@@ -447,7 +437,7 @@ function setupResetButton() {
 
                 <div class="form-group">
                     <label for="keyword">검색</label>
-                    <input type="text" name="keyword" id="keyword" style="width: 250px" value="${sVO.keyword}"  placeholder="검색할 키워드를 입력하세요" />
+                    <input type="text" name="keyword" id="keyword" style="width: 250px" value="${sVO.keyword}" class="form-control"  placeholder="검색할 키워드를 입력하세요" />
                 </div>
 
                 <div class="form-group" style="justify-content: center; margin-top: 50px;">
@@ -461,10 +451,12 @@ function setupResetButton() {
       <!-- 리뷰검색 결과 출력 div -->
      <div class="form">
                 <h5  class="form-group" style="border-bottom: 1px solid  #EEF0F4"> 검색결과: <c:out value="${sVO.totalCount }"/> 건</h5>
-                <c:out value="${sVO }"></c:out>
+                <c:out value="${sVO }"/>
 
    <table  class="table table-striped table-hover">
-   
+   <c:if test="${empty listBoard }">
+   <tr> <td colspan="5" style="text-align: center;"> <strong>해당 조건에 맞는 검색 결과가 없습니다</strong>  </td></tr>
+   </c:if>
       <thead> 
       <tr>
 	      <td>번호</td>
@@ -475,13 +467,16 @@ function setupResetButton() {
       </tr>
       </thead>
       <tbody>
-	 <c:forEach var="rVO" items="${listBoard }" varStatus="i">
+	 <c:forEach var="rVO" items="${listBoard}" varStatus="i">
 	 <tr>
-	      <td>    <c:out value="${ totalCount - (currentPage - 1) * pageScale - i.index }"/></td>
+          <td><c:out value="${(totalCount - ((currentPage-1) * pageScale)) - i.index}"/>
+</td>
+          
+          
       	  <td><a href="#" onclick="openPopup('${rVO.reviewId}')"> <c:out value="${rVO.productName}"/></a></td>
 	      <td>  <c:out value="${rVO.content }"></c:out>  </td>
 	      <td>  <c:out value="${rVO.userId }"/>  </td>
-	      <td><fmt:formatDate value="${rVO.createAt}" pattern="yyyy-MM-dd HH:mm"/></td>
+	      <td><fmt:formatDate value="${rVO.createAt}" pattern="yyyy-MM-dd"/></td>
 	 </tr>
 	 </c:forEach>      
       
@@ -503,7 +498,6 @@ function setupResetButton() {
 
       
    </div>
-
 </body>
 
 </html>

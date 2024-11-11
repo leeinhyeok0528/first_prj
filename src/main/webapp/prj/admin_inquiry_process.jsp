@@ -16,7 +16,7 @@ info="문의에 대해 답변을 추가/삭제 하는 일"
 
     AdminInquiryDAO aiDAO = AdminInquiryDAO.getInstance();
 
-    String message;
+    String message ="";
     boolean successFlag = false;
 
     if ("delete".equals(action) ) {

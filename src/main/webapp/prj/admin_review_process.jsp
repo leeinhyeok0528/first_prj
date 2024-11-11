@@ -1,65 +1,49 @@
+<%@page import="review.ReviewVO"%>
 <%@page import="review.AdminReviewDAO"%>
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" 
-info="문의에 대해 답변을 추가/삭제 하는 일"
-%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.SQLException"%>
-<%@ page import="inquiry.InquiryVO"%>
-<%@ page import="inquiry.AdminInquiryDAO"%>
 <% request.setCharacterEncoding("UTF-8"); %>
 
 <%
-    String action = request.getParameter("submitAction");
-    int reviewId = Integer.parseInt(request.getParameter("reviewId")); 
+    // 초기 메시지와 성공 플래그
+    String msg = "잘못된 요청입니다.";
+    boolean success = false;
 
-    // 디버깅을 위해 파라미터 값 출력
-   System.out.println (action);
-   System.out.println (reviewId);
+    try {
+        // reviewId를 정수로 바로 파싱
+        int reviewId = Integer.parseInt(request.getParameter("reviewId"));
 
-	AdminReviewDAO arDAO = AdminReviewDAO.getInstance();
+        // DAO 호출
+        AdminReviewDAO arDAO = AdminReviewDAO.getInstance();
+        ReviewVO rVO = new ReviewVO();
+        rVO.setReviewId(reviewId);
 
-    String message;
-	
-    
-    boolean successFlag = false;
-    if(action == null){
-	    
-    	
-    }//end if
-    
-    
-    
-    
-    
-    if (action != null  ) {
-        try {
-			
-				
-        	iVO.setInquiryId(inquiryId);
+        // 삭제 처리
+        int rowCount = arDAO.deleteReview(rVO);
 
-            int rowCount = aiDAO.deleteInquiry(iVO);
-
-            if (rowCount > 0) {
-                message = "삭제가 완료되었습니다.";
-                successFlag = true;
-            } else {
-                message = "삭제에 실패하였습니다.";
-            }
-        } catch (NumberFormatException e) {
-            message = "유효하지 않은 문의 ID입니다.";
-            e.printStackTrace();
-        } catch (SQLException e) {
-            message = "데이터베이스 오류가 발생하였습니다.";
-            e.printStackTrace();
+        if (rowCount > 0) {
+            msg = "리뷰가 성공적으로 삭제되었습니다.";
+            success = true;
+        } else {
+            msg = "리뷰 삭제에 실패했습니다. 해당 리뷰를 찾을 수 없습니다.";
         }
-    }//end if
-
+    } catch (NumberFormatException e) {
+        msg = "유효하지 않은 리뷰 ID입니다.";
+        e.printStackTrace();
+    } catch (SQLException e) {
+        msg = "데이터베이스 오류가 발생했습니다.";
+        e.printStackTrace();
+    }
 %>
+
 <script>
-    alert('<%= message %>');
+    alert('<%= msg %>');
     <% if (success) { %>
         if (window.opener) {
             window.opener.location.reload(); // 부모 창 새로고침
         }
+        window.close(); // 팝업 닫기
+    <% } else { %>
+        history.back(); // 이전 페이지로 이동
     <% } %>
-    window.close(); // 팝업 닫기
 </script>

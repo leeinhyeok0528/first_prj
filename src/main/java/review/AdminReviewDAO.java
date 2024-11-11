@@ -12,224 +12,298 @@ import java.util.List;
 import kr.co.sist.dao.DbConnection;
 
 public class AdminReviewDAO {
-	private static AdminReviewDAO adDAO;
+    private static AdminReviewDAO adDAO;
 
-	private AdminReviewDAO() {
+    private AdminReviewDAO() {
 
-	}// constructor
+    }//constructor
 
-	public static AdminReviewDAO getInstance() {
-		if (adDAO == null) {
-			adDAO = new AdminReviewDAO();
+    public static AdminReviewDAO getInstance() {
+        if (adDAO == null) {
+            adDAO = new AdminReviewDAO();
+        }
+        return adDAO;
+    }//getInstance
 
-		} // end if
-		return adDAO;
+    public int selectTotalCount(ReviewSearchVO sVO) throws SQLException {
+        int totalCount = 0;
 
-	}// getInstance
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
 
-	public int selectTotalCount(ReviewSearchVO sVO) throws SQLException {
-		int totalCount = 0;
+        DbConnection dbCon = DbConnection.getInstance();
 
-		Connection con = null;
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
+        try {
+            con = dbCon.getConn();
+            StringBuilder selectCount = new StringBuilder();
+            selectCount.append("SELECT COUNT(r.review_id) AS cnt ")
+                       .append("FROM review r ")
+                       .append("JOIN products p ON r.product_id = p.product_id ");
 
-		DbConnection dbCon = DbConnection.getInstance();
+            boolean hasWhere = false;
+            int paramIndex = 1; // 바인드 변수 인덱스 관리
 
-		/*
-		 * 날짜필터, 내용에서 키워드로 검색하기, 작성자로 검색하기
-		 */
-		try {
-			con = dbCon.getConn();
-			StringBuilder selectCount = new StringBuilder();
-			selectCount.append("SELECT COUNT(review_id) AS cnt FROM review ");
+            // 날짜 필터가 있을 때
+            if (sVO.getStartDate() != null && sVO.getEndDate() != null &&
+                !sVO.getStartDate().isEmpty() && !sVO.getEndDate().isEmpty()) {
+                selectCount.append(" WHERE r.created_at BETWEEN ? AND ? ");
+                hasWhere = true;
+            }
 
-			boolean hasWhere = false;
-			int paramIndex = 1; // 바인드 변수 인덱스 관리
+            // 유형 필터가 있을 때 ('all'이 아닐 경우에만 조건 추가)
+            if (sVO.getFilter() != null && !"".equals(sVO.getFilter()) && !"all".equalsIgnoreCase(sVO.getFilter())) {
+                if (!hasWhere) {
+                    selectCount.append(" WHERE ");
+                    hasWhere = true;
+                } else {
+                    selectCount.append(" AND ");
+                }
+                selectCount.append("p.name = ? "); // 예: 특정 상품명으로 필터링
+            }
 
-			// 날짜 필터가 있을 때
-			if (sVO.getStartDate() != null && sVO.getEndDate() != null) {
-				selectCount.append(" WHERE created_at BETWEEN ? AND ? ");
-				hasWhere = true;
-			}
+            // 검색 키워드가 있을 때
+            if (sVO.getKeyword() != null && !"".equals(sVO.getKeyword())) {
+                if (!hasWhere) {
+                    selectCount.append(" WHERE ");
+                    hasWhere = true;
+                } else {
+                    selectCount.append(" AND ");
+                }
+                String searchCondition = "";
+                switch (sVO.getField()) {
+                    case "1": // 상품명
+                        searchCondition = "p.name LIKE ?";
+                        break;
+                    case "2": // 작성자
+                        searchCondition = "r.user_id LIKE ?";
+                        break;
+                    case "3": // 내용
+                        searchCondition = "r.content LIKE ?";
+                        break;
+                    default: // 전체 검색
+                        searchCondition = "(p.name LIKE ? OR r.user_id LIKE ? OR r.content LIKE ?)";
+                        break;
+                }
+                selectCount.append(searchCondition);
+            }
 
-			// 유형 필터가 있을 때 ('all'이 아닐 경우에만 조건 추가)
-			if (sVO.getFilter() != null && !"".equals(sVO.getFilter()) && !"0".equalsIgnoreCase(sVO.getFilter())) {
-				if (!hasWhere) {
-					selectCount.append(" WHERE ");
-					hasWhere = true;
-				} else {
-					selectCount.append(" AND ");
-				}
-				selectCount.append("category = ? ");
-			}//end else
+            pstmt = con.prepareStatement(selectCount.toString());
 
-			// 검색 키워드가 있을 때
-			if (sVO.getKeyword() != null && !"".equals(sVO.getKeyword())) {
-				if (!hasWhere) {
-					selectCount.append(" WHERE ");
-					hasWhere = true;
-				} else {
-					selectCount.append(" AND ");
-				}
-				selectCount.append("instr(").append(ReviewUtil.numToField(sVO.getField())).append(", ?) != 0");
-			}
+            // 바인드 변수에 값 설정
+            if (sVO.getStartDate() != null && sVO.getEndDate() != null &&
+                !sVO.getStartDate().isEmpty() && !sVO.getEndDate().isEmpty()) {
+                pstmt.setDate(paramIndex++, java.sql.Date.valueOf(sVO.getStartDate()));
+                pstmt.setDate(paramIndex++, java.sql.Date.valueOf(sVO.getEndDate()));
+            }
 
-			pstmt = con.prepareStatement(selectCount.toString());
+            if (sVO.getFilter() != null && !"".equals(sVO.getFilter()) && !"all".equalsIgnoreCase(sVO.getFilter())) {
+                pstmt.setString(paramIndex++, sVO.getFilter());
+            }
 
-			// 바인드 변수에 값 설정
-			if (sVO.getStartDate() != null && sVO.getEndDate() != null) {
-				pstmt.setDate(paramIndex++, java.sql.Date.valueOf(sVO.getStartDate()));
-				pstmt.setDate(paramIndex++, java.sql.Date.valueOf(sVO.getEndDate()));
-			}
+            if (sVO.getKeyword() != null && !"".equals(sVO.getKeyword())) {
+                switch (sVO.getField()) {
+                    case "1": // 상품명
+                    case "2": // 작성자
+                    case "3": // 내용
+                        pstmt.setString(paramIndex++, "%" + sVO.getKeyword() + "%");
+                        break;
+                    default: // 전체 검색
+                        pstmt.setString(paramIndex++, "%" + sVO.getKeyword() + "%");
+                        pstmt.setString(paramIndex++, "%" + sVO.getKeyword() + "%");
+                        pstmt.setString(paramIndex++, "%" + sVO.getKeyword() + "%");
+                        break;
+                }
+            }//end if
 
-			if (sVO.getFilter() != null && !"".equals(sVO.getFilter()) && !"all".equalsIgnoreCase(sVO.getFilter())) {
-				pstmt.setString(paramIndex++, sVO.getFilter());
-			}
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                totalCount = rs.getInt("cnt");
+            }
+        } finally {
+            dbCon.dbClose(rs, pstmt, con);
+        }
 
-			if (sVO.getKeyword() != null && !"".equals(sVO.getKeyword())) {
-				pstmt.setString(paramIndex++, sVO.getKeyword());
-			}
-
-			rs = pstmt.executeQuery();
-			if (rs.next()) {
-				totalCount = rs.getInt("cnt");
-			}
-		} finally {
-			dbCon.dbClose(rs, pstmt, con);
-		}
-
-		return totalCount;
-
-	}// selectTotalCount
-
-
-
-	/**
-	 * 
-	 * @param rdVO
-	 * @return
-	 */
-	public List<ReviewVO> selectAllReview() throws SQLException {
-		List<ReviewVO> reviewList = new ArrayList<>();
-
-		Connection con = null;
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
-		DbConnection dbCon = DbConnection.getInstance();
-
-		try {
-			// 데이터베이스 연결
-			con = dbCon.getConn();
-
-			// SQL 쿼리 작성
-			StringBuilder selectQuery = new StringBuilder();
-			selectQuery.append("SELECT r.review_id, r.user_id, r.product_id, p.name AS product_name, ")
-					.append("r.content, r.created_at, r.rating ").append("FROM review r ")
-					.append("JOIN products p ON r.product_id = p.product_id");
-
-			pstmt = con.prepareStatement(selectQuery.toString());
-
-			// 쿼리 실행
-			rs = pstmt.executeQuery();
-
-			// 결과를 ReviewVO 객체에 저장
-			while (rs.next()) {
-				ReviewVO rVO = new ReviewVO();
-				// 매핑 작업
-				rVO.setReviewId(rs.getInt("review_id"));
-				rVO.setUserId(rs.getString("user_id"));
-				rVO.setProductId(rs.getInt("product_id"));
-				rVO.setProductName(rs.getString("product_name")); // 제품 이름 설정
-				rVO.setCreateAt(rs.getTimestamp("created_at"));
-				rVO.setRating(rs.getInt("rating"));
-
-				try (BufferedReader br = new BufferedReader(rs.getClob("content").getCharacterStream())) {
-					StringBuilder content = new StringBuilder();
-					String temp;
-					while ((temp = br.readLine()) != null) {
-						content.append(temp).append("\n");
-					}
-					rVO.setContent(content.toString());
-				} catch (IOException ie) {
-					throw new SQLException("CLOB 데이터를 읽는 중 오류가 발생했습니다.", ie);
-				}
-
-				// 리스트에 추가
-				reviewList.add(rVO);
-			}
-		} finally {
-			// 자원 해제
-			dbCon.dbClose(rs, pstmt, con);
-		}
-
-		return reviewList; // 모든 리뷰 리스트 반환
-	}// selectAllReview
+        return totalCount;
+    }
 
 
-	
-	public ReviewVO selectOneReview(int reviewId) throws SQLException {
-		ReviewVO rVO = null;
-		StringBuilder selectReview = new StringBuilder();
-		selectReview.append("SELECT review_id, user_id, product_id, content, created_at, rating ")
-				.append("FROM review ").append("WHERE review_id = ?");
+    public List<ReviewVO> selectAllReview(ReviewSearchVO sVO) throws SQLException {
+        List<ReviewVO> reviewList = new ArrayList<>();
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        DbConnection dbCon = DbConnection.getInstance();
 
-		try (Connection con = DbConnection.getInstance().getConn();
-				PreparedStatement pstmt = con.prepareStatement(selectReview.toString())) {
+        try {
+            con = dbCon.getConn();
 
-			pstmt.setInt(1, reviewId);
+            // 페이징 처리를 포함한 SQL 쿼리
+            StringBuilder selectQuery = new StringBuilder();
+            selectQuery.append("SELECT * FROM ( ")
+                      .append("    SELECT ROWNUM AS RNUM, A.* FROM ( ")
+                      .append("        SELECT r.review_id, r.user_id, r.product_id, p.name AS product_name, ")
+                      .append("        r.content, r.created_at, r.rating ")
+                      .append("        FROM review r ")
+                      .append("        JOIN products p ON r.product_id = p.product_id ");
 
-			try (ResultSet rs = pstmt.executeQuery()) {
-				if (rs.next()) {
-					rVO = new ReviewVO();
-					rVO.setReviewId(rs.getInt("review_id"));
-					rVO.setUserId(rs.getString("user_id"));
-					rVO.setProductId(rs.getInt("product_id"));
-					rVO.setCreateAt(rs.getTimestamp("created_at"));
-					rVO.setRating(rs.getInt("rating"));
+            // 검색 조건 추가
+            List<String> conditions = new ArrayList<>();
+            List<Object> parameters = new ArrayList<>();
 
-					try {
-						BufferedReader br = new BufferedReader(rs.getClob("content").getCharacterStream());
-						StringBuilder content = new StringBuilder();
-						String temp;
-						while ((temp = br.readLine()) != null) {
-							content.append(temp).append("\n");
-						}
-						rVO.setContent(content.toString());
-					} catch (IOException ie) {
-						throw new SQLException("CLOB 데이터를 읽는 중 오류가 발생했습니다.", ie);
-					} // catch
-				} // end if
-			} // try
-		} // try
-		return rVO;
-	}// selectOneReview
-	
-	
-	
-	
-	/**
-	 * @param rVO
-	 * @return
-	 */
-	public int deleteReview(ReviewVO rVO) throws SQLException {
-		int deleteCnt = 0;
+            // 날짜 필터
+            if (sVO.getStartDate() != null && sVO.getEndDate() != null &&
+                    !sVO.getStartDate().isEmpty() && !sVO.getEndDate().isEmpty()) {
+                conditions.add("r.created_at BETWEEN ? AND ?");
+                parameters.add(java.sql.Date.valueOf(sVO.getStartDate()));
+                parameters.add(java.sql.Date.valueOf(sVO.getEndDate()));
+            }
 
-		Connection con = null;
-		PreparedStatement pstmt = null;
-		DbConnection dbCon = DbConnection.getInstance();
+            // 검색 조건
+            if (sVO.getKeyword() != null && !sVO.getKeyword().isEmpty()) {
+                String columnName = "";
+                switch (sVO.getField()) {
+                    case "1": // 상품명
+                        conditions.add("p.name LIKE ?");
+                        parameters.add("%" + sVO.getKeyword() + "%");
+                        break;
+                    case "2": // 작성자
+                        conditions.add("r.user_id LIKE ?");
+                        parameters.add("%" + sVO.getKeyword() + "%");
+                        break;
+                    case "3": // 내용
+                        conditions.add("r.content LIKE ?");
+                        parameters.add("%" + sVO.getKeyword() + "%");
+                        break;
+                    default: // 전체 검색
+                        conditions.add("(p.name LIKE ? OR r.user_id LIKE ? OR r.content LIKE ?)");
+                        parameters.add("%" + sVO.getKeyword() + "%");
+                        parameters.add("%" + sVO.getKeyword() + "%");
+                        parameters.add("%" + sVO.getKeyword() + "%");
+                        break;
+                }
+            }
 
-		try {
-			con = dbCon.getConn();
-			String deleteQuery = "DELETE FROM review WHERE review_id = ?";
-			pstmt = con.prepareStatement(deleteQuery);
-			pstmt.setInt(1, rVO.getReviewId());
+            // WHERE 절 추가
+            if (!conditions.isEmpty()) {
+                selectQuery.append(" WHERE ").append(String.join(" AND ", conditions));
+            }
 
-			deleteCnt = pstmt.executeUpdate();
-		} finally {
-			dbCon.dbClose(null, pstmt, con);
-		}
-		return deleteCnt;
-	}// deleteReview
+            // 정렬 및 페이징 처리 완성
+            selectQuery.append("        ORDER BY r.review_id DESC")
+                      .append("    ) A WHERE ROWNUM <= ?")
+                      .append(") WHERE RNUM >= ?");
 
-}// class
+            pstmt = con.prepareStatement(selectQuery.toString());
+
+            // 파라미터 바인딩
+            int paramIndex = 1;
+            for (Object param : parameters) {
+                if (param instanceof java.sql.Date) {
+                    pstmt.setDate(paramIndex++, (java.sql.Date) param);
+                } else {
+                    pstmt.setString(paramIndex++, (String) param);
+                }
+            }
+
+            // 페이징 처리를 위한 파라미터 바인딩
+            pstmt.setInt(paramIndex++, sVO.getEndNum());
+            pstmt.setInt(paramIndex, sVO.getStartNum());
+
+            rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                ReviewVO rVO = new ReviewVO();
+                rVO.setReviewId(rs.getInt("review_id"));
+                rVO.setUserId(rs.getString("user_id"));
+                rVO.setProductId(rs.getInt("product_id"));
+                rVO.setProductName(rs.getString("product_name"));
+                rVO.setCreateAt(rs.getTimestamp("created_at"));
+                rVO.setRating(rs.getInt("rating"));
+
+                try (BufferedReader br = new BufferedReader(rs.getClob("content").getCharacterStream())) {
+                    StringBuilder content = new StringBuilder();
+                    String temp;
+                    while ((temp = br.readLine()) != null) {
+                        content.append(temp).append("\n");
+                    }
+                    rVO.setContent(content.toString());
+                } catch (IOException ie) {
+                    throw new SQLException("CLOB 데이터를 읽는 중 오류가 발생했습니다.", ie);
+                }
+
+                reviewList.add(rVO);
+            }
+        } finally {
+            dbCon.dbClose(rs, pstmt, con);
+        }
+
+        return reviewList;
+    }
+
+    public ReviewVO selectOneReview(int reviewId) throws SQLException {
+        ReviewVO rVO = null;
+        StringBuilder selectReview = new StringBuilder();
+        selectReview.append("SELECT r.review_id, r.user_id, r.product_id, p.name, ")
+                    .append("r.content, r.created_at, r.rating, r.review_img ")
+                    .append("FROM review r ")
+                    .append("JOIN products p ON r.product_id = p.product_id ")
+                    .append("WHERE r.review_id = ?");
+
+        try (Connection con = DbConnection.getInstance().getConn();
+             PreparedStatement pstmt = con.prepareStatement(selectReview.toString())) {
+
+            pstmt.setInt(1, reviewId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    rVO = new ReviewVO();
+                    rVO.setReviewId(rs.getInt("review_id"));
+                    rVO.setUserId(rs.getString("user_id"));
+                    rVO.setProductId(rs.getInt("product_id"));
+                    rVO.setProductName(rs.getString("name")); // name으로 매핑
+                    rVO.setCreateAt(rs.getTimestamp("created_at"));
+                    rVO.setRating(rs.getInt("rating"));
+                    rVO.setReviewImg(rs.getString("review_img"));
+                    System.out.println(rVO.getCreateAt());
+
+                    // CLOB 데이터 읽기
+                    try {
+                        BufferedReader br = new BufferedReader(rs.getClob("content").getCharacterStream());
+                        StringBuilder content = new StringBuilder();
+                        String temp;
+                        while ((temp = br.readLine()) != null) {
+                            content.append(temp).append("\n");
+                        }
+                        rVO.setContent(content.toString());
+                    } catch (IOException ie) {
+                        throw new SQLException("CLOB 데이터를 읽는 중 오류가 발생했습니다.", ie);
+                    }
+                }
+            }
+        }
+        return rVO;
+    }
+
+
+    public int deleteReview(ReviewVO rVO) throws SQLException {
+        int deleteCnt = 0;
+
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        DbConnection dbCon = DbConnection.getInstance();
+
+        try {
+            con = dbCon.getConn();
+            String deleteQuery = "DELETE FROM review WHERE review_id = ?";
+            pstmt = con.prepareStatement(deleteQuery);
+            pstmt.setInt(1, rVO.getReviewId());
+
+            deleteCnt = pstmt.executeUpdate();
+        } finally {
+            dbCon.dbClose(null, pstmt, con);
+        }
+        return deleteCnt;
+    }
+}
+

@@ -9,7 +9,7 @@ public class ReviewUtil {
      * @param sVO
      * @return
      */
-	private static String[] columnName={"0,product_name,user_id,content"};
+	private static String[] columnName={"0","product_name", "user_id","content"};
 
 	public static String numToField( String fieldNum) {
 		return columnName[Integer.parseInt(fieldNum)];

@@ -3,6 +3,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"   
     %>
+    <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+    <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!DOCTYPE html>
 <html>
 
@@ -40,7 +42,6 @@
             width: 100%;
         }
 
-        /* 테이블을 한 줄로 나란히 정렬하는 CSS */
         .titleTable {
             width: 100%;
             table-layout: fixed;
@@ -54,7 +55,6 @@
             white-space: nowrap;
         }
 
-        /* 리뷰 컨테이너 - Flexbox 사용 */
         .reviewContainer {
             display: flex;
             border: 1px solid #ddd;
@@ -64,107 +64,108 @@
             max-height: 300px;
         }
 
-		/* 이미지 영역 (40%) */
-		.review-image {
-		    flex: 0 0 40%;  /* 40%의 공간을 차지 */
-		    margin-right: 20px;
-		    max-width: 40%;  /* 최대 너비를 40%로 제한 */
-		}
-		
-		/* 텍스트 영역 (60%) */
-		.review-text {
-		    flex: 0 0 60%;  /* 60%의 공간을 차지 */
-		}
-				img {
-		    max-width: 100%;  /* 부모 요소의 너비를 넘지 않도록 설정 */
-		    max-height: 100%; /* 부모 요소의 높이를 넘지 않도록 설정 */
-		    height: auto;     /* 비율을 유지하면서 높이를 자동 조정 */
-		    width: auto;      /* 비율을 유지하면서 너비를 자동 조정 */
-		    object-fit: contain; /* 이미지가 잘리지 않고 틀에 맞춰줌 */
-		}
+        .reviewImage {
+            flex: 0 0 40%;
+            margin-right: 20px;
+            max-width: 40%;
+        }
 
+        .reviewText {
+            flex: 1; /* 전체 공간을 차지하도록 수정 */
+        }
+
+        img {
+            max-width: 100%;
+            max-height: 100%;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+        }
     </style>
     <script type="text/javascript">
-    $(function(){
-    	$(function(){
-    	
-    		
-    		$("#delete").click(function(){
-    			
-    			alert("삭제버튼 등록");
-    		})//삭제버튼 이벤트 등록
-    		
-    		$("#close").click(function(){
-    			self.close();
-    		})//닫기버튼 이벤트 등록
-    		
-    		
-    	})//ready
-    	
-    	
-    })//ready
-    
-    
-    
+        $(function () {
+            $("#delete").click(function () {
+                if (confirm("삭제하시겠습니까?")) {
+                    $("#submitFrm").submit();
+                }//end if
+            });
+
+            $("#close").click(function () {
+                self.close();
+            });//close btn
+        }); //ready
     </script>
-    
-    
 </head>
 
 <body>
-
     <div class="header">
         리뷰 상세보기
     </div>
 
     <div class="content">
-<%
-AdminReviewDAO arDAO = AdminReviewDAO.getInstance();
-ReviewVO rVO = null;
-int reviewId= Integer.parseInt(request.getParameter("reviewId"));
+        <%
+            AdminReviewDAO arDAO = AdminReviewDAO.getInstance();
+            ReviewVO rVO = null;
+            int reviewId = Integer.parseInt(request.getParameter("reviewId"));
 
-rVO = arDAO.selectOneReview(reviewId);
- 
-request.setAttribute("rVO", rVO);
-request.setAttribute("reviewId", reviewId);
-%>
+            try {
+                rVO = arDAO.selectOneReview(reviewId);
+            } catch (NumberFormatException ne) {
+                ne.printStackTrace();
+                out.println("<p>유효하지 않은 리뷰 ID입니다.</p>");
+            }
 
-
-
-
+            if (rVO == null) {
+                out.println("<p>해당 ID로 리뷰를 찾을 수 없습니다.</p>");
+            } else {
+        %>
         <table class="titleTable">
             <tr>
-                <th>상품명</th>
-                <td>예시</td>
-
+           
                 <th>작성자</th>
-                <td>예시 제목</td>
-
+                <td><%= rVO.getUserId() %></td>
                 <th>리뷰 등록일</th>
-                <td>2024-10-15</td>
-
+                
+                <td><fmt:formatDate value="<%=rVO.getCreateAt() %>" pattern="yyyy-MM-dd"/></td>
+                 
+            </tr>
+            
+                <tr><th>상품명</th>
+                <td colspan="3"><%= rVO.getProductName() %></td>
+            
             </tr>
         </table>
 
-        <!-- 리뷰가 보이는 공간: 이미지 40%, 텍스트 60% -->
         <div class="reviewContainer">
-            <!-- 이미지 영역 -->
-            <div class="reviewImage">
-                <img src="http://localhost/first_prj/prj/images/img1.png" alt="리뷰 이미지">
-            </div>
+            <c:if test="${rVO.reviewImg != null && !rVO.reviewImg.isEmpty()}">
+                <!-- 이미지 영역 -->
+                <div class="reviewImage">
+                    <img src="<%= rVO.getReviewImg() %>" alt="리뷰 이미지">
+                </div>
+            </c:if>
 
-            <!-- 리뷰내용 영역 -->
+            <!-- 리뷰 내용 -->
             <div class="reviewText">
+                <p><%= rVO.getContent() %></p>
             </div>
         </div>
 
-        <!-- 버튼 영역 -->
-        <div style="text-align: center;">
-        <input type="button" class="btn btn-success btn-sm" value="삭제" id="delete" name="delete" >
-        <input type="button" class="btn btn-light btn-sm" value="닫기" id="close" name="close">
-        </div>
+        <form action="admin_review_process.jsp" method="post" name="submitFrm" id="submitFrm">
+            <input type="hidden" name="reviewId" value="<%= reviewId %>">
+            <div style="text-align: center; margin-top: 20px;">
+                <input type="button" class="btn btn-danger btn-sm" value="삭제" id="delete" name="delete">
+                <input type="button" class="btn btn-light btn-sm" value="닫기" id="close" name="close">
+            </div>
+        </form>
+        
+        <%
+        
+        out.print(rVO.getReviewImg());
+            }
+        %>
+        <img src="${rVO.getReviewImg()}">
+        
     </div>
-
+    <c:out value="${rVO.createAt }"/>
 </body>
-
 </html>
