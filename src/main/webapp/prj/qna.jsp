@@ -161,7 +161,7 @@ function defaultDate() {
 
     const selectedDateOption = $('input[name="date"]:checked').val();
 
-    if (selectedDateOption === 'all') {
+    if (selectedDateOption === 'all') { //전체로 설정하면 날짜 설정 X
         $('#startDate').val('');
         $('#endDate').val('');
     } else {
@@ -414,7 +414,7 @@ function setupResetButton() {
 
                 <div class="form-group">
                     <label for="search">검색</label>
-                    <select name="field" id="field">
+                    <select name="field" id="field" class="form-select">
                         <option value="0" <c:if test="${sVO.field eq '0'}">selected</c:if>>제목</option>
                         <option value="1" <c:if test="${sVO.field eq '1'}">selected</c:if>>내용</option>
                         <option value="2" <c:if test="${sVO.field eq '2'}">selected</c:if>>작성자</option>
@@ -438,7 +438,9 @@ function setupResetButton() {
                 </h5>
                 <table class="table table-striped table-hover">
                  <c:if test="${empty listBoard }">
-   					<tr> <td colspan="5" style="text-align: center;"> <strong>해당 조건에 맞는 검색 결과가 없습니다</strong>  </td></tr>
+   					<tr>
+   						 <td colspan="6" style="text-align: center; height: 100px; font-size: 15px"> <strong>해당 조건에 맞는 검색 결과가 없습니다 </strong></td>
+   					</tr>
    				</c:if>		
                     <thead style="font-size: 20px;">
                         <tr>
@@ -463,7 +465,7 @@ function setupResetButton() {
                         </c:forEach>
                     </tbody>
                 </table>
-                   <p style="color: E9ECEF ;font-size: 12px ">클릭시 문의 상세보기 페이지가 나타납니다.</p>
+                   <p style="color: E9ECEF ;font-size: 12px ">제목 클릭시 문의 상세보기 페이지가 나타납니다.</p>
                 
             </div>
 

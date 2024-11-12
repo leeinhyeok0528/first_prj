@@ -483,7 +483,7 @@ function setupResetButton() {
       </tbody>
    </table>
      		
-   <p style="color: E9ECEF;font-size: 12px">클릭시 리뷰 상세보기 페이지가 나타납니다.</p>
+   <p style="color: E9ECEF;font-size: 12px">상품명 클릭시 리뷰 상세보기 페이지가 나타납니다.</p>
    
        <!-- 페이지네이션 -->
             <div id="pagination" style="text-align: center">

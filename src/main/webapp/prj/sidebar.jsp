@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
- <h3>    <a href="main.jsp">관리자 명     </a>  </h3>
+ <h3>    <a href="admin_main.jsp">관리자 명     </a>  </h3>
       <div class="accordion" id="accordionSidebar">
          <div class="accordion-item" >
             <h2 class="accordion-header" id="headingOne">

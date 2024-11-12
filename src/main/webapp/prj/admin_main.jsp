@@ -1,8 +1,12 @@
 
+<%@page import="dashboard.DeliveryStatusVO"%>
+<%@page import="java.util.List"%>
+<%@page import="dashboard.AdminDashBoardDAO"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"
 	info="관리자 페이지 메인 대시보드 화면"
 	%>
+	
 
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
@@ -190,6 +194,29 @@ body, html {
 
 </head>
 
+<% 
+///미답변 문의 가져오기
+AdminDashBoardDAO adbDAO = AdminDashBoardDAO.getInstance();
+int inquiryCnt = adbDAO.inquiryCnt();
+
+//신규주문 가져오기
+int newOrderCnt = adbDAO.selectCountNewOrders();
+
+//구매확정 가져오기
+int confirmedCnt = adbDAO.selectCountConfirmed();
+
+//기존회원 가져오기
+int totalMemberCnt = adbDAO.totalMemberCnt();
+
+//신규회원 가져오기
+int newMemberCnt = adbDAO.newMemberCnt();
+
+//주문취소 수 가져오기
+int cancelCnt = adbDAO.orderCancel();
+
+//배송상태 가져오기
+List<DeliveryStatusVO> list = adbDAO.selectDeliveryStatus();
+%>
 <body>
 
 	<!-- 상단 고정 헤더 -->
@@ -210,16 +237,20 @@ body, html {
 			<div class="innerBox">
 				<img src="http://192.168.10.225/first_prj/prj/images/img1.png"
 					style="float: left;">
-				<p>신규주문 N건</p>
+				<p>신규주문 <c:out value="<%=newOrderCnt %>"/>  건</p>
 
 
 			</div>
 			<div class="innerBox">
-				<img src="http://192.168.10.225/first_prj/prj/images/img2.png"
-					style="float: left;">
-				<p>배송준비 N건</p>
-				<p>배송중 N건</p>
-				<p>배송완료 N건</p>
+			  <img src="http://192.168.10.225/first_prj/prj/images/img2.png" style="float: left;">
+    <p>배송 상태</p>
+        
+           <%  for (DeliveryStatusVO statusVO : list) {     %>
+   
+            <p> <%= statusVO.getStatus() %>: <%= statusVO.getCount() %>건 </p>
+        
+          <%  }  %>
+       
 			</div>
 		</div>
 
@@ -229,14 +260,13 @@ body, html {
 			<div class="innerBox">
 				<img src="http://192.168.10.225/first_prj/prj/images/img3.png"
 					style="float: left;">
-				<p>취소요청 N건</p>
-				<p>교환요청 N건</p>
+				<p>취소요청 <c:out value="<%= cancelCnt %>"/> 건</p>
 
 			</div>
 			<div class="innerBox">
 				<img src="http://192.168.10.225/first_prj/prj/images/img4.png"
 					style="float: left;">
-				<p>구매확정 N건</p>
+				<p>구매확정 <c:out value="<%= confirmedCnt %>"/>  건</p>
 
 			</div>
 		</div>
@@ -256,15 +286,15 @@ body, html {
 			<div class="innerBox">
 				<img src="http://192.168.10.225/first_prj/prj/images/img5.png"
 					style="float: left;">
-				<p>기존회원 N명</p>
-				<p>신규회원 N건</p>
+				<p>총회원  <c:out value="<%= totalMemberCnt %>"/> 명</p>
+				<p>신규회원  <c:out value="<%= newMemberCnt %>"/>명</p>
 
 
 			</div>
 			<div class="innerBox">
 				<img src="http://192.168.10.225/first_prj/prj/images/img6.png"
 					style="float: left;">
-				<p>신규문의 N건</p>
+				<p>미답변문의 <c:out value="<%=inquiryCnt %>"/>  건</p>
 			</div>
 		</div>
 	</div>
